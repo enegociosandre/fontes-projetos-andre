@@ -1,0 +1,259 @@
+Group Revisa
+   Version=7.0
+   VSSDB=
+   HasProperties=1
+   Properties
+      BeforeApply=
+      AfterApply=
+      Icon=
+      ID=
+      Version=
+      PalmName=
+      OutPut=
+   End
+   ProjectsCount=8
+   Project Estoque
+      FoldersCount=1
+      Folder Fontes
+         VSSPath=Fontes
+         FilesCount=6
+         File D:\Totvs\teste\protheus11\my projects\Estoque\Codaut.PRW
+             Type=T
+         End
+         File D:\Totvs\teste\protheus11\my projects\Estoque\CadSZ2.PRW
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Estoque\mt240tok.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Estoque\mt241tok.PRW
+             Type=T
+         End
+         File \Totvs\producao\protheus11_data\Patch\enderecamento\CheckEst2.PRW
+             Type=T
+         End
+         File \Totvs\producao\protheus11_data\Patch\enderecamento\DIFSLDINI2.PRW
+             Type=T
+         End
+      End
+   End
+   Project Faturamento
+      FoldersCount=2
+      Folder Fontes
+         VSSPath=Nova Pasta1
+         FilesCount=2
+         File D:\Totvs\teste\protheus11\my projects\Faturamento\ISS\C6ALQISS.PRW
+             Type=T
+         End
+         File D:\Totvs\teste\protheus11\my projects\Faturamento\CadSZ1.PRW
+             Type=T
+         End
+      End
+      Folder Ponto de Entrada
+         VSSPath=Nova Pasta2
+         FilesCount=4
+         File D:\Totvs\teste\protheus11\my projects\Faturamento\Ponto de Entrada\M030EXC.prw
+             Type=T
+         End
+         File D:\Totvs\teste\protheus11\my projects\Faturamento\Ponto de Entrada\M030INC.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Faturamento\Ponto de Entrada\MSD2460.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Faturamento\Ponto de Entrada\M410LIOK.prw
+             Type=T
+         End
+      End
+   End
+   Project Contabilidade
+      FoldersCount=4
+      Folder Ponto de Entrada
+         VSSPath=Nova Pasta1
+         FilesCount=1
+         File D:\Totvs\teste\protheus11\my projects\Contabilidade\Ponto de Entrada\CT105QRY.prw
+             Type=T
+         End
+      End
+      Folder Relatorios
+         VSSPath=Nova Pasta2
+         FilesCount=2
+         File D:\Totvs\teste\protheus11\my projects\Contabilidade\Relatorios\RELCTB01.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Contabilidade\Relatorios\RELBXEST.prw
+             Type=T
+         End
+      End
+      Folder Rotinas
+         VSSPath=Nova Pasta3
+         FilesCount=4
+         File D:\Totvs\teste\protheus11\my projects\Contabilidade\Rotinas\GERLPEXC.PRW
+             Type=T
+         End
+         File D:\Totvs\teste\protheus11\my projects\Contabilidade\Rotinas\RetFlag.prw
+             Type=T
+         End
+         File D:\Totvs\teste\protheus11\my projects\Contabilidade\Rotinas\fCtaSup.prw
+             Type=T
+         End
+         File D:\Totvs\teste\protheus11\my projects\Contabilidade\Rotinas\TECXCTB.PRW
+             Type=T
+         End
+      End
+      Folder LP
+         VSSPath=Nova Pasta4
+         FilesCount=2
+         File \Totvs\producao\protheus11\my projects\Contabilidade\LP\LP596.PRW
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Contabilidade\LP\LP597.PRW
+             Type=T
+         End
+      End
+   End
+   Project Compras
+      FoldersCount=2
+      Folder Rotinas
+         VSSPath=Nova Pasta1
+         FilesCount=6
+         File D:\Totvs\teste\protheus11\my projects\Compras\Rotinas\zCodFor.prw
+             Type=T
+         End
+         File D:\Totvs\teste\protheus11\my projects\Compras\Rotinas\ValF1DOC.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Compras\Rotinas\zzGatilho.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Compras\Rotinas\zzGatilho2.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Compras\Rotinas\zzpedido.prw
+             Type=T
+         End
+         File \Totvs\teste\protheus11\my projects\Compras\Rotinas\zzvEstoque.prw
+             Type=T
+         End
+      End
+      Folder Ponto de Entrada
+         VSSPath=Nova Pasta2
+         FilesCount=4
+         File D:\Totvs\teste\protheus11\my projects\Compras\Ponto de Entrada\A020EOK.prw
+             Type=T
+         End
+         File D:\Totvs\teste\protheus11\my projects\Compras\Ponto de Entrada\M020INC.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Compras\Ponto de Entrada\MT103IPC.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Compras\Rotinas\NOVO2.prw
+             Type=T
+         End
+      End
+   End
+   Project Controle de Tarefas
+      FoldersCount=1
+      Folder Rotinas
+         VSSPath=Nova Pasta1
+         FilesCount=3
+         File \Totvs\producao\protheus11\my projects\Controle de Tarefas\CADZ99.PRW
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Controle de Tarefas\CargaTarefas.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\RH\recibo.prx
+             Type=T
+         End
+      End
+   End
+   Project NFE-e
+      FoldersCount=3
+      Folder Fontes
+         VSSPath=Nova Pasta1
+         FilesCount=4
+         File \Totvs\producao\protheus11\my projects\NFE-e\Fonte\danfeii.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\NFE-e\Fonte\danfeiii.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\NFE-e\Fonte\nfesefaz.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\NFE-e\Fonte\criaSX3.PRW
+             Type=T
+         End
+      End
+      Folder Classe
+         VSSPath=Nova Pasta2
+         FilesCount=1
+         File \Totvs\producao\protheus11\my projects\NFE-e\Classe\FswTemplMsg.prw
+             Type=T
+         End
+      End
+      Folder PE
+         VSSPath=Nova Pasta3
+         FilesCount=5
+         File \Totvs\producao\protheus11\my projects\NFE-e\PE\GQREENTR.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\NFE-e\PE\M460FIM.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\NFE-e\PE\sf1100e.PRW
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\NFE-e\PE\SF2520E.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\NFE-e\PE\PE01NFESEFAZ.prw
+             Type=T
+         End
+      End
+   End
+   Project NFS-e
+      FoldersCount=1
+      Folder Fontes
+         VSSPath=Nova Pasta1
+         FilesCount=3
+         File \Totvs\producao\protheus11\my projects\NFS-e\NFSEXml001.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\NFS-e\NFSEXml002.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\NFS-e\NFSEXml102.PRW
+             Type=T
+         End
+      End
+   End
+   Project Financeiro
+      FoldersCount=2
+      Folder PE
+         VSSPath=Nova Pasta1
+         FilesCount=4
+         File \Totvs\producao\protheus11\my projects\Financeiro\PE\SACI008.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Financeiro\PE\FA050INC.prw
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Financeiro\PE\FA040GRV.PRW
+             Type=T
+         End
+         File \Totvs\producao\protheus11\my projects\Financeiro\PE\FA050GRV.PRW
+             Type=T
+         End
+      End
+      Folder Relatorios
+         VSSPath=Nova Pasta2
+         FilesCount=1
+         File \Totvs\producao\protheus11\my projects\Financeiro\Relatorio\uFinR550.prw
+             Type=T
+         End
+      End
+   End
+End

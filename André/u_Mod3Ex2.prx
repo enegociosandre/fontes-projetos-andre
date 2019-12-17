@@ -1,0 +1,467 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "HEADERGD.CH"
+
+/*/
+	Funcao:		U_Mod3Ex2
+	Autor:		Marinaldo de Jesus
+	Descricao:	Exemplo de Uso da Modelo 3
+	Uso:		Generico
+/*/
+User Function Mod3Ex2()
+
+	Private cCadastro	:= "Exemplo de Uso Modelo3"
+	
+	Private aRotina 	:= MenuDef()
+	
+	mBrowse( 6 , 1 , 22 , 75 , "SF4" )
+	
+Return( NIL )
+
+/*/
+	Funcao:		MenuDef
+	Autor:		Marinaldo de Jesus
+	Descricao:	Opcoes do Menu aRotina
+	Uso:		Generico
+/*/
+Static Function MenuDef()
+Return(;
+			{;
+				{ "Pesquisar"	,	"AxPesqui"  										  , 0 , 1 ,0  , .F. },;
+				{ "Visualizar"	,	"StaticCall(u_Mod3Ex2,Ex2Mnt,'SF4',SF4->(Recno()),2)" , 0 , 2 ,0  , NIL },;
+				{ "Incluir"		,	"StaticCall(u_Mod3Ex2,Ex2Mnt,'SF4',SF4->(Recno()),3)" , 0 , 3 ,0  , NIL },;
+				{ "Alterar"		,	"StaticCall(u_Mod3Ex2,Ex2Mnt,'SF4',SF4->(Recno()),4)" , 0 , 4 ,15 , NIL },;
+				{ "Excluir"		,	"StaticCall(u_Mod3Ex2,Ex2Mnt,'SF4',SF4->(Recno()),5)" , 0 , 5 ,16 , NIL } ;
+			};
+		)
+
+/*/
+	Funcao:		Ex2Mnt
+	Autor:		Marinaldo de Jesus
+	Descricao:	Rotina de Manutencao do Exemplo da Modelo3
+	Uso:		Generico
+/*/
+Static Function Ex2Mnt( cAlias , nReg , nOpc )
+
+	Local aSF4Cols		:= {}
+	Local aSvSF4Cols	:= {}
+	Local aSF4Header	:= {}
+	Local aSF4Fields	:= {}
+	Local aSF4VirtEn	:= {}
+	Local aSF4VisuEn	:= {}
+	Local aSF4NotFields	:= {}
+	Local aSF4Valid		:= {}
+	Local aSF4NotValid	:= {}
+	Local aSF4Altera	:= {}
+	Local aSF4NaoAlt	:= {}
+	Local aSF4Recnos	:= {}
+	Local aSF4Keys		:= {}
+
+	Local aSFCKeys
+	Local aSFCVirtGd
+	Local aSFCVisuGd
+	Local aSFCNotFields	:= { "FC_TES" }
+	Local aSFCRecnos
+	Local aSvSFCCols
+
+	Local bGetSF4
+	Local bGetSFC
+
+	Local bSFCLinOk		:= { |oSFCBrwGd| Mod3Lok( oSFCBrwGd ) }
+	Local bSFCTudOk		:= { |oSFCBrwGd| Mod3Tok( oSFCBrwGd ) }
+
+	Local cSF4Fil		:= ""
+	Local cSF4Codigo	:= ""
+	Local cSFCKeySeek
+
+	Local lMod3Ret		:= .F.
+	Local lLocks		:= .F.
+	Local lExecLock		:= ( ( nOpc <> 2 ) /*/Visualizacao/*/ .and. ( nOpc <> 3 ) /*/Inclusao/*/ )
+
+	Local nLoop			:= 0
+	Local nOpcGD		:= IF( ( ( nOpc == 2 ) /*/Visualizacao/*/ .or. ( nOpc == 5 ) /*/Exclusao/*/ ) , 0 , GD_INSERT + GD_UPDATE + GD_DELETE	)
+	Local nSF4Usado		:= 0
+	Local nSFCUsado		:= 0
+	Local nSFCOrder		:= RetOrder( "SF4" , "FC_FILIAL+FC_TES+FC_SEQ" )
+
+	Private aCols		:= {}
+	Private aHeader		:= {}
+
+	Private aGets
+	Private aTela
+
+	Private n			:= 1
+
+	BEGIN SEQUENCE
+
+		aRotSetOpc( cAlias , @nReg , nOpc )
+
+		bGetSF4			:= { |lLock,lExclu|	IF( lExecLock , ( lLock := .T. , lExclu	:= .T. ) , aSF4Keys := NIL ),;
+											aSF4Cols := SF4->(;
+									  							GdBuildCols(	@aSF4Header		,;	//01 -> Array com os Campos do Cabecalho da GetDados
+																				@nSF4Usado		,;	//02 -> Numero de Campos em Uso
+																				@aSF4VirtEn		,;	//03 -> [@]Array com os Campos Virtuais
+																				@aSF4VisuEn		,;	//04 -> [@]Array com os Campos Visuais
+																				"SF4"			,;	//05 -> Opcional, Alias do Arquivo Carga dos Itens do aCols
+																				aSF4NotFields	,;	//06 -> Opcional, Campos que nao Deverao constar no aHeader
+																				@aSF4Recnos		,;	//07 -> [@]Array unidimensional contendo os Recnos
+																				"SF4"		   	,;	//08 -> Alias do Arquivo Pai
+																				NIL				,;	//09 -> Chave para o Posicionamento no Alias Filho
+																				NIL				,;	//10 -> Bloco para condicao de Loop While
+																				NIL				,;	//11 -> Bloco para Skip no Loop While
+																				NIL				,;	//12 -> Se Havera o Elemento de Delecao no aCols 
+																				NIL				,;	//13 -> Se Sera considerado o Inicializador Padrao
+																				NIL				,;	//14 -> Opcional, Carregar Todos os Campos
+																				NIL				,;	//15 -> Opcional, Nao Carregar os Campos Virtuais
+																				NIL				,;	//16 -> Opcional, Utilizacao de Query para Selecao de Dados
+																				NIL				,;	//17 -> Opcional, Se deve Executar bKey  ( Apenas Quando TOP )
+																				NIL				,;	//18 -> Opcional, Se deve Executar bSkip ( Apenas Quando TOP )
+																				NIL				,;	//19 -> Carregar Coluna Fantasma
+																				NIL				,;	//20 -> Inverte a Condicao de aNotFields carregando apenas os campos ai definidos
+																				NIL				,;	//21 -> Verifica se Deve Checar se o campo eh usado
+																				NIL				,;	//22 -> Verifica se Deve Checar o nivel do usuario
+																				NIL				,;	//23 -> Verifica se Deve Carregar o Elemento Vazio no aCols
+																				@aSF4Keys		,;	//24 -> [@]Array que contera as chaves conforme recnos
+																				@lLock			,;	//25 -> [@]Se devera efetuar o Lock dos Registros
+																				@lExclu			 ;	//26 -> [@]Se devera obter a Exclusividade nas chaves dos registros
+																		    );
+															  ),;
+											IF( lExecLock , ( lLock .and. lExclu ) , .T. );
+		  					} 
+	
+	    IF !( lLocks := WhileNoLock( "SF4" , NIL , NIL , 1 , 1 , .T. , 1 , 5 , bGetSF4 ) )
+			Break
+		EndIF
+
+		MkArrEdFlds( nOpc , aSF4Header , aSF4VisuEn , aSF4VirtEn , @aSF4NaoAlt , @aSF4Altera , @aSF4Fields )
+
+   		For nLoop := 1 To nSF4Usado
+   			SetMemVar( aSF4Header[ nLoop , __AHEADER_FIELD__ ] , aSF4Cols[ 01 , nLoop ] , .T. )
+   		Next nLoop
+
+		cSF4Fil		:= SF4->F4_FILIAL
+		cSF4Codigo	:= SF4->F4_CODIGO
+		cSFCKeySeek	:= cSF4Fil+cSF4Codigo
+
+		SFC->( dbSetOrder( nSFCOrder ) )
+
+		SFC->( dbSeek( cSFCKeySeek , .F. ) )
+
+		bGetSFC	:= { |lLock,lExclu|	IF( lExecLock , ( lLock := .T. , lExclu := .T. ) , aSFCKeys := NIL ),;
+						 				aCols := SFC->(;
+														GdBuildCols(	@aHeader		,;	//01 -> Array com os Campos do Cabecalho da GetDados
+																		@nSFCUsado		,;	//02 -> Numero de Campos em Uso
+																		@aSFCVirtGd		,;	//03 -> [@]Array com os Campos Virtuais
+																		@aSFCVisuGd		,;	//04 -> [@]Array com os Campos Visuais
+																		"SFC"			,;	//05 -> Opcional, Alias do Arquivo Carga dos Itens do aCols
+																		aSFCNotFields	,;	//06 -> Opcional, Campos que nao Deverao constar no aHeader
+																		@aSFCRecnos		,;	//07 -> [@]Array unidimensional contendo os Recnos
+																		"SF4"		   	,;	//08 -> Alias do Arquivo Pai
+																		cSFCKeySeek		,;	//09 -> Chave para o Posicionamento no Alias Filho
+																		NIL				,;	//10 -> Bloco para condicao de Loop While
+																		NIL				,;	//11 -> Bloco para Skip no Loop While
+																		NIL				,;	//12 -> Se Havera o Elemento de Delecao no aCols 
+																		NIL				,;	//13 -> Se Sera considerado o Inicializador Padrao
+																		NIL				,;	//14 -> Opcional, Carregar Todos os Campos
+																		NIL				,;	//15 -> Opcional, Nao Carregar os Campos Virtuais
+																		NIL				,;	//16 -> Opcional, Utilizacao de Query para Selecao de Dados
+																		.F.				,;	//17 -> Opcional, Se deve Executar bKey  ( Apenas Quando TOP )
+																		.F.				,;	//18 -> Opcional, Se deve Executar bSkip ( Apenas Quando TOP )
+																		NIL				,;	//19 -> Carregar Coluna Fantasma e/ou BitMap ( Logico ou Array )
+																		NIL				,;	//20 -> Inverte a Condicao de aNotFields carregando apenas os campos ai definidos
+																		NIL				,;	//21 -> Verifica se Deve Checar se o campo eh usado
+																		NIL				,;	//22 -> Verifica se Deve Checar o nivel do usuario
+																		NIL				,;	//23 -> Verifica se Deve Carregar o Elemento Vazio no aCols
+																		@aSFCKeys		,;	//24 -> [@]Array que contera as chaves conforme recnos
+																		@lLock			,;	//25 -> [@]Se devera efetuar o Lock dos Registros
+																		@lExclu			,;	//26 -> [@]Se devera obter a Exclusividade nas chaves dos registros
+																		1				,;	//27 -> Numero maximo de Locks a ser efetuado
+																		Altera			 ;	//28 -> Utiliza Numeracao na GhostCol
+																    );
+														  ),;
+										IF( lExecLock , ( lLock .and. lExclu ) , .T. );
+		  		    }
+
+	    IF !( lLocks := WhileNoLock( "SFC" , NIL , NIL , 1 , 1 , .T. , 1 , 5 , bGetSFC ) )
+			Break
+		EndIF
+
+		IF ( nOpc == 3  ) //Inclusao
+			GdDefault( NIL , "SF4" , aSF4Header , @aSF4Cols , NIL , .F. )
+			aSF4Valid	:= GdObrigat( aSF4Header )
+		Else
+			IF ( nOpc == 4 )
+				aSF4Valid	:= GdObrigat( aSF4Header )
+			EndIF
+			aAdd( aSF4NotValid , "F4_CODIGO" )
+		EndIF
+
+		IF ( Len( aCols ) == 1 .and. Empty( GdFieldGet( "FC_SEQ" ) ) )
+			GdFieldPut( "FC_SEQ" , GdNumItem( "FC_SEQ" ) )
+		EndIF
+
+		aSvSF4Cols	:= aClone( aSF4Cols )
+		aSvSFCCols	:= aClone( aCols )
+
+		lMod3Ret	:=	StaticCall(;
+									u_Modelo3		,;	//Executa "Dentro do Programa u_Modelo3.prx
+									Modelo3			,;	//A Static Function Modelo3
+					   				cCadastro		,;	//01 -> Titulo da Janela
+					   				"SF4"			,;	//02 -> Alias da Enchoice
+					   				NIL				,;	//03 -> Nao Usado ( Para Compatibilizar com a Modelo3 Padrao equivalente a cAlias2 )
+					   				@aSF4Fields		,;	//04 -> Array com campos da Enchoice
+					   				bSFCLinOk		,;	//05 -> Linha OK na GetDados ( Public Function or CodeBlock )
+					   				bSFCTudOk		,;	//06 -> Tudo Ok na GetDados  ( Public Function or CodeBlock )
+					   				nOpc			,;	//07 -> nOpc da Enchoice
+					   				nOpcGD			,;	//08 -> nOpc da GetDados
+					   				NIL				,;	//09 -> Validacao para todos os campos da GetDados
+					   				.T.				,;	//10 -> Permite visualizar campos virtuais na enchoice
+					   				999				,;	//11 -> Numero Maximo de linhas na getdados	
+					   				aSF4Altera		,;	//12 -> Array com campos da Enchoice Alteraveis
+					   				NIL				,;	//13 -> Congelamento das colunas na GetDados
+					   				NIL				,;	//14 -> Objeto Enchoiche ( MsMGet():New() )
+					   				NIL				,;	//15 -> Objeto GetDados ( MsNewGetDados:New() )
+					   				NIL			    ,;	//16 -> Array com campos da GetDados Alteraveis
+					   				NIL				,;	//17 -> Validar Delecao de Item na GetDados ( Public Function or CodeBlock )
+									@aHeader		,;	//18 -> Array com os Campos da GetDados
+									@aCols			,;	//19 -> Array com os Itens da GetDados
+									"+FC_SEQ"		,;	//20 -> Campo para Numeracao Automatica na GetDados ( Sample: "+ZF_SEQ" )
+					   				aSF4Valid		,;	//21 -> Array com campos que devem ser Validados na Enchoice
+					   				aSF4NotValid	,;	//22 -> Array com campos que nao devem ser Validados na Enchoice
+					   				NIL				,;	//23 -> Array com os Botoes para a EnchoiceBar
+					   				.F.				,;	//24 -> Dialog Padrao Siga
+					   				NIL				,;	//25 -> Objeto Dialog
+									NIL				,;  //26 -> Coordenadas Para os Objetos Enchoice e GetDados
+					   				NIL				,;	//27 -> String Com Funcao para o TudoOk da Enchoice
+					   				NIL				,;	//28 -> Bloco para Validar Todas as Informacoes da GetDados e da Enchoice
+									NIL				,;	//29 -> Bloco para Acao do Botao OK
+									NIL				,;	//30 -> Bloco para Acao do Botao Cancel
+									NIL				,;	//31 -> Bloco para a Inicializacao do Dialog
+									NIL				,;	//32 ->	cAtela ( Enchoice )
+									NIL				,;	//33 -> lNoFolder ( Enhcoice )
+									NIL				,;	//34 -> Se os Dados ficarao em apenas uma coluna ( Enchoice )
+									NIL				,;	//35 -> Desabilitar Consulta via Tecla F3 ( Enchoice )
+									NIL				,;	//36 -> nColMens ( Enchoice )
+									NIL				,;	//37 -> cMensagem ( Enchoice )
+									NIL				,;  //38 -> Funcao ou CodeBlock para executar SuperDel na GetDados
+									250				 ;	//39 -> Utilizado no Alinamento dos Objetos
+								)	
+	
+		IF ( lMod3Ret )
+	 		IF ( nOpc != 2 )
+				MsAguarde(;
+							{ ||;
+									Mod3Ex2Grv(;
+													@nOpc		,;	//01 -> Opcao de Acordo com aRotina
+								 					@nReg		,;	//02 -> Numero do Registro do Arquivo Pai ( SFC )
+								 					@aSF4Header	,;	//03 -> Campos do Arquivo Pai ( SF4 )
+								 					@aSF4VirtEn	,;	//04 -> Campos Virtuais do Arquivo Pai ( SF4 )
+								 					@aSF4Cols	,;	//05 -> Conteudo Atual dos Campos do Arquivo Pai ( SF4 )
+								 					@aSvSF4Cols	,;	//06 -> Conteudo Anterior dos Campos do Arquivo Pai ( SF4 )
+								 					@aHeader	,;	//07 -> Campos do Arquivo Filho ( SFC )
+								 					@aCols		,;	//08 -> Itens Atual do Arquivo Filho ( SFC )
+								 					@aSvSFCCols	,;	//09 -> Itens Anterior do Arquivo Filho ( SFC )
+								 					@aSFCVirtGd	,;	//10 -> Campos Virtuais do Arquivo Filho ( SFC )
+								 					@aSFCRecnos	 ;	//11 -> Recnos do Arquivo Filho ( SFC )
+								 				 );
+							};
+						  )
+			EndIF
+		EndIF
+
+	END SEQUENCE
+
+	FreeLocks( "SFC" , aSFCRecnos , .T. , aSFCKeys )
+	FreeLocks( "SF4" , aSF4Recnos , .T. , aSF4Keys )
+	
+Return( NIL )
+
+/*/
+	Funcao:		Mod3Lok
+	Autor:		Marinaldo de Jesus
+	Descricao:	Funcao para Validacao da Linha Ok da GetDados
+	Uso:		Generico
+/*/
+Static Function Mod3Lok( oBrowse )
+
+	Local lLinOk  		:= .T.
+	
+	Local aCposKey
+
+	Begin Sequence
+
+		IF !( GdDeleted() )
+			aCposKey := GdObrigat( aHeader )
+			IF !( lLinOk := GdNoEmpty( aCposKey ) )
+		    	Break
+			EndIF
+			aCposKey := GetArrUniqe( "SFC" )
+			IF !( lLinOk := GdCheckKey( aCposKey , 4 ) )
+				Break
+			EndIF
+		EndIF
+
+	End Sequence
+
+	IF !( lLinOk )
+		oBrowse:SetFocus()
+	EndIF
+
+Return( lLinOk )
+
+/*/
+	Funcao:		Mod3Tok
+	Autor:		Marinaldo de Jesus
+	Descricao:	Funcao Para Validacao do TudoOk da GetDados
+	Uso:		Generico
+/*/
+Static Function Mod3Tok( oBrowse )
+
+	Local lTudoOk		:= .T.
+
+	Local nLoop
+	Local nLoops
+	Local nDeleted
+
+	IF ( Type( "n" ) <> "N" )
+		Private n := 0
+	EndIF
+	
+	Begin Sequence
+	
+		nDeleted := GdFieldPos( "GDDELETED" )
+		
+		nLoops := Len( aCols )
+		For nLoop := 1 To nLoops
+			n := nLoop
+			IF !( aCols[ n , nDeleted ] )
+				IF !( lTudoOk := Mod3Lok( oBrowse ) )
+					oBrowse:Refresh()
+					oBrowse:Goto( n )
+					Break
+				EndIF
+			EndIF
+		Next nLoop
+	
+	End Sequence
+
+Return( lTudoOk  )
+
+/*/
+	Funcao:		Mod3Ex2Grv
+	Autor:		Marinaldo de Jesus
+	Descricao:	Funcao para Gravacao/Exclusao das Informacoes se TudoOk
+	Uso:		Generico
+/*/
+Static Function Mod3Ex2Grv(	nOpc		,;	//01 -> Opcao de Acordo com aRotina
+						 	nReg		,;	//02 -> Numero do Registro do Arquivo Pai ( SF4 )
+						 	aSF4Header	,;	//03 -> Campos do Arquivo Pai ( SF4 )
+						 	aSF4VirtEn	,;	//04 -> Campos Virtuais do Arquivo Pai ( SF4 )
+						 	aSF4Cols	,;	//05 -> Conteudo Atual dos Campos do Arquivo Pai ( SF4 )
+						 	aSvSF4Cols	,;	//06 -> Conteudo Anterior dos Campos do Arquivo Pai ( SF4 )
+						 	aSFCHeader	,;	//07 -> Campos do Arquivo Filho ( SFC )
+						 	aSFCCols	,;	//08 -> Itens Atual do Arquivo Filho ( SFC )
+						 	aSvSFCCols	,;	//09 -> Itens Anterior do Arquivo Filho ( SFC )
+						 	aSFCVirtGd	,;	//10 -> Campos Virtuais do Arquivo Filho ( SFC )
+						 	aSFCRecnos	 ;	//11 -> Recnos do Arquivo Filho ( SFC )
+						  )
+
+	Local aMestre	:= GdPutIStrMestre( 01 )
+	Local aItens	:= {}
+	Local cOpcao	:= IF( ( nOpc == 5 ) , "DELETE" , IF( ( ( nOpc == 3 ) .or. ( nOpc == 4 ) ) , "PUT" , NIL ) )
+	Local cSF4Codigo	:= GetMemVar( "F4_CODIGO" )
+	Local lAllModif	:= .F.
+	Local lSF4Modif	:= .F.
+	Local lSFCModif	:= .F.
+	Local lSFCDelet	:= .F.
+	
+	Local aSFCColDel
+	Local aSFCRecDel
+	
+	Local nLoop
+	Local nLoops
+	Local nItens
+
+	IF ( cOpcao == "DELETE" )
+		GdSuperDel( aSFCHeader , @aSFCCols , NIL , .T. )
+		lSF4Modif := .T.
+	EndIF
+
+	IF ( lSFCModif := !ArrayCompare( aSFCCols , aSvSFCCols ) )
+		IF ( cOpcao <> "DELETE" )
+			GdSuperDel( aSFCHeader , @aSFCCols , NIL , .T. , GdGetBlock( "SFC" , aSFCHeader , .F. ) ) 
+		EndIF	
+		lSFCDelet := GdSplitDel( aSFCHeader , @aSFCCols , @aSFCRecnos , @aSFCColDel , @aSFCRecDel )
+	EndIF
+
+	IF ( lSFCModif )
+
+		IF ( lSFCDelet )
+
+			aAdd( aItens , GdPutIStrItens() )
+			nItens := Len( aItens )
+
+			aItens[ nItens , 01 ] := "SFC"
+			aItens[ nItens , 02 ] := NIL
+			aItens[ nItens , 03 ] := aClone( aSFCHeader )
+			aItens[ nItens , 04 ] := aClone( aSFCColDel )
+			aItens[ nItens , 05 ] := aClone( aSFCVirtGd )
+			aItens[ nItens , 06 ] := aClone( aSFCRecDel )
+			aItens[ nItens , 07 ] := {}
+			aItens[ nItens , 08 ] := NIL
+			aItens[ nItens , 09 ] := NIL
+			aItens[ nItens , 10 ] := ""
+
+		EndIF
+
+		aAdd( aItens , GdPutIStrItens() )
+		nItens := Len( aItens )
+		aItens[ nItens , 01 ] := "SFC"
+		aItens[ nItens , 02 ] := {;
+									{ "FILIAL"	, xFilial( "SFC" , xFilial( "SF4" ) ) },;
+									{ "TES"		, cSF4Codigo };
+							 	 }
+		aItens[ nItens , 03 ] := aClone( aSFCHeader )
+		aItens[ nItens , 04 ] := aClone( aSFCCols   )
+		aItens[ nItens , 05 ] := aClone( aSFCVirtGd )
+		aItens[ nItens , 06 ] := aClone( aSFCRecnos )
+		aItens[ nItens , 07 ] := {}
+		aItens[ nItens , 08 ] := NIL
+		aItens[ nItens , 09 ] := NIL
+		aItens[ nItens , 10 ] := ""
+
+	EndIF
+
+	IF !( lSF4Modif )
+		nLoops := Len( aSF4Header )
+		For nLoop := 1 To nLoops
+			aSF4Cols[ 01 , nLoop ] := GetMemVar( aSF4Header[ nLoop , 02 ] )
+		Next nLoop
+		lSF4Modif := !( ArrayCompare( aSF4Cols , aSvSF4Cols ) )
+	EndIF
+
+ 	lAllModif := ( ( lSFCModif ) .or. ( lSF4Modif ) )
+
+	IF ( lAllModif )
+
+		aMestre[ 01 , 01 ]	:= "SF4"
+		aMestre[ 01 , 02 ]	:= nReg
+		aMestre[ 01 , 03 ]	:= lSF4Modif
+		aMestre[ 01 , 04 ]	:= aClone( aSF4Header )
+		aMestre[ 01 , 05 ]	:= aClone( aSF4VirtEn )
+		aMestre[ 01 , 06 ]	:= {}
+		aMestre[ 01 , 07 ]	:= aClone( aItens )
+		aMestre[ 01 , 08 ]	:= ""
+
+		GdPutInfoData( aMestre , cOpcao , .F. , .F. )
+
+		IF ( cOpcao <> "DELETE" )
+			SFC->( FkCommit() )
+			SF4->( FkCommit() )
+		Else
+			SF4->( FkCommit() )
+			SFC->( FkCommit() )
+		EndIF
+
+	EndIF
+
+Return( NIL )		

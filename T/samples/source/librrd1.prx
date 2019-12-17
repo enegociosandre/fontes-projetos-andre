@@ -1,0 +1,572 @@
+#INCLUDE "LIBRRD1.ch"
+#INCLUDE "PROTHEUS.CH"
+ 
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³FUNCAO    ³ LIBRRD1  ³ Autor ³ Liber de Esteban      ³ Data ³ 10/05/2006 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³DESCRICAO ³ Imprime livro de imposto a la renta para Rep. Dominicana     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User FUNCTION LIBRRD1()
+
+Local oReport
+
+AjSX1LIBRD()
+
+If FindFunction("TRepInUse") .And. TRepInUse()
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Interface de impressao                                                  ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	oReport := ReportDef()
+	oReport:PrintDialog()
+Else
+	U_LIBRRD1R3()
+EndIf
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³FUNCAO    ³ReportDef ³ Autor ³ Liber de Esteban      ³ Data ³ 10/05/2006 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³DESCRICAO ³ Definicao do componente                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function ReportDef()
+
+Local oReport
+Local oDoctos
+Local oEmpresa
+Local oBreak
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Criacao do componente de impressao                                      ³
+//³                                                                        ³
+//³TReport():New                                                           ³
+//³ExpC1 : Nome do relatorio                                               ³
+//³ExpC2 : Titulo                                                          ³
+//³ExpC3 : Pergunte                                                        ³
+//³ExpB4 : Bloco de codigo que sera executado na confirmacao da impressao  ³
+//³ExpC5 : Descricao                                                       ³
+//³                                                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+oReport := TReport():New("LIBRRD1",OemToAnsi(STR0019),"LIBRD1",; //"Registro de Apuração de Antecipação"
+{|oReport| ReportPrint(oReport)},OemToAnsi(STR0020)+OemToAnsi(STR0021)) //"Emiss„o do Registro de Apuração do imposto de antecipação "###"de acordo com os periodos informados "
+
+oReport:SetTotalInLine(.F.)
+Pergunte("LIBRD1",.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Criacao da secao utilizada pelo relatorio                               ³
+//³                                                                        ³
+//³TRSection():New                                                         ³
+//³ExpO1 : Objeto TReport que a secao pertence                             ³
+//³ExpC2 : Descricao da seçao                                              ³
+//³ExpA3 : Array com as tabelas utilizadas pela secao. A primeira tabela   ³
+//³        sera considerada como principal para a seção.                   ³
+//³ExpA4 : Array com as Ordens do relatório                                ³
+//³ExpL5 : Carrega campos do SX3 como celulas                              ³
+//³        Default : False                                                 ³
+//³ExpL6 : Carrega ordens do Sindex                                        ³
+//³        Default : False                                                 ³
+//³                                                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Criacao da celulas da secao do relatorio                                ³
+//³                                                                        ³
+//³TRCell():New                                                            ³
+//³ExpO1 : Objeto TSection que a secao pertence                            ³
+//³ExpC2 : Nome da celula do relatório. O SX3 será consultado              ³
+//³ExpC3 : Nome da tabela de referencia da celula                          ³
+//³ExpC4 : Titulo da celula                                                ³
+//³        Default : X3Titulo()                                            ³
+//³ExpC5 : Picture                                                         ³
+//³        Default : X3_PICTURE                                            ³
+//³ExpC6 : Tamanho                                                         ³
+//³        Default : X3_TAMANHO                                            ³
+//³ExpL7 : Informe se o tamanho esta em pixel                              ³
+//³        Default : False                                                 ³
+//³ExpB8 : Bloco de código para impressao.                                 ³
+//³        Default : ExpC2                                                 ³
+//³                                                                        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+CriaTMP()
+
+oEmpresa:=TRSection():New(oReport,OemToAnsi(STR0033),/*{"SM0"}*/,{STR0032}/*{Array com as ordens do relatório}*/,/*Campos do SX3*/,/*Campos do SIX*/) //"Identificação da Empresa" //"Dt.Emissao + Num.Dcto + Serie"
+TRCell():New(oEmpresa,"M0_CGC","SM0",STR0022,/*Picture*/,24,/*lPixel*/,/*{|| code-block de impressao }*/) //"Identificação Fiscal"###"RNC "
+TRCell():New(oEmpresa,"M0_NOMECOM","SM0",STR0024,/*Picture*/,42,/*lPixel*/,/*{|| code-block de impressao }*/) //"Razão Social"
+
+oDoctos:=TRSection():New(oReport,OemToAnsi(STR0034),{"TMP"},{STR0032}/*{Array com as ordens do relatório}*/,/*Campos do SX3*/,/*Campos do SIX*/) //"Documentos" //"Dt.Emissao + Num.Dcto + Serie"
+TRCell():New(oDoctos,"EMISSAO","TMP",STR0025,/*Picture*/,08,/*lPixel*/,/*{|| code-block de impressao }*/) //"Data"
+TRCell():New(oDoctos,"DOC","TMP",STR0026,/*Picture*/,09,/*lPixel*/,/*{|| code-block de impressao }*/) //"Documento"
+TRCell():New(oDoctos,"SERIE","TMP",STR0027,/*Picture*/,05,/*lPixel*/,/*{|| code-block de impressao }*/) //"Serie"
+TRCell():New(oDoctos,"VALOR","TMP",STR0028,"@E 999,999,999.99",15,/*lPixel*/,/*{|| code-block de impressao }*/) //"Valor Documento"
+TRCell():New(oDoctos,"ALIQ","TMP",STR0029,"@E 99.99",07,/*lPixel*/,/*{|| code-block de impressao }*/) //"Aliquota"
+TRCell():New(oDoctos,"TOTALIR","TMP",STR0030,"@E 999,999,999.99",15,/*lPixel*/,/*{|| code-block de impressao }*/) //"Imposto Total"
+
+oBreak:=TRBreak():New(oDoctos,oDoctos:Cell("EMISSAO"),STR0031,.F.) //"Total Geral da Data"
+
+//Totaliza valor e total de imposto por data
+TRFunction():New(oDoctos:Cell("VALOR"),NIL,"SUM",oBreak,STR0031,/*cPicture*/,/*uFormula*/,.F.,.F.) //"Total Geral da Data"
+TRFunction():New(oDoctos:Cell("TOTALIR"),NIL,"SUM",oBreak,STR0031,/*cPicture*/,/*uFormula*/,.F.,.F.) //"Total Geral da Data"
+
+//Totaliza valor e total de imposto no final do relatorio
+TRFunction():New(oDoctos:Cell("VALOR"),NIL,"SUM",/*oBreak*/,/*cTitulo*/,/*cPicture*/,/*uFormula*/,.F.,.T.)
+TRFunction():New(oDoctos:Cell("TOTALIR"),NIL,"SUM",/*oBreak*/,/*cTitulo*/,/*cPicture*/,/*uFormula*/,.F.,.T.)
+
+Return(oReport)
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ReportPrint³ Autor ³Liber de Esteban       ³ Data ³10/05/2006³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³A funcao estatica ReportDef devera ser criada para todos os  ³±±
+±±³          ³relatorios que poderao ser agendados pelo usuario.           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Retorno   ³Nenhum                                                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ExpO1: Objeto Report do Relatório                            ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³   DATA   ³ Programador   ³Manutencao efetuada                          ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³               ³                                             ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+Static Function ReportPrint(oReport)
+
+AlimTMP()
+
+oReport:Section(1):Cell("M0_CGC"):SetBlock({|| OemToAnsi(STR0023)+Transform(SM0->M0_CGC,"@R 9-99-99999-9")})
+oReport:Section(1):Cell("M0_NOMECOM"):SetBlock({|| SM0->M0_NOMECOM})
+oReport:Section(1):Init()
+oReport:Section(1):PrintLine()
+oReport:Section(1):Finish()
+
+oReport:Section(2):Init()
+dbSelectArea("TMP")
+dbGoTop()
+While !Eof()
+	oReport:Section(2):PrintLine()
+	dbSkip()
+Enddo
+oReport:Section(2):Finish()
+
+dbSelectArea("TMP")
+dbCloseArea()
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³FUNCAO    ³LIBRRD1R3 ³ Autor ³ Armando P. Waiteman   ³ Data ³ 18.12.96   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³DESCRICAO ³ Imprime livro de imposto a la renta para Rep. Dominicana     ³±±
+±±³          ³ (Release 3)                                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL.                       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ PROGRAMADOR  ³ DATA   ³ BOPS ³  MOTIVO DA ALTERACAO                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User FUNCTION LIBRRD1R3()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnRel	  :="LIBRRD1"
+Titulo    :=OemtoAnsi(STR0001) //"Registro de Apuracao de Antecipação"
+cDesc1    :=OemtoAnsi(STR0002) //"Emiss„o do Registro de Apuracao do imposto de antecipação"
+cDesc2    :=OemtoAnsi(STR0003) //"de acordo com os periodos informados"
+cDesc3    :=""
+aReturn   :={ OemtoAnsi(STR0004), 1,OemtoAnsi(STR0005), 2, 2, 1, "",1 } //"Zebrado"###"Administra‡„o"
+nomeprog  :="LIBRRD1"
+cPerg	  :="LIBRD1"
+cString   := "SF2"
+nPagina	  :=0
+nLin	  :=0
+nLargMax  :=80
+Tamanho	  :="P"
+m_pag     :=1
+
+aSvArea	  :=GetArea()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Inicializa grupo de perguntas.                               ³
+//³ Parametros utilizados pelo Programa                          ³
+//³ mv_par01 - A partir da Data                                  ³
+//³ mv_par02 - Ate a Data                                        ³
+//³ mv_par03 - Aliquota                                          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Pergunte(cPerg,.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Envia controle para a funcao SETPRINT ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+nLastKey  :=0
+wnrel	  :=SetPrint(cString,wnrel,cPerg,Titulo,cDesc1,cDesc2,cDesc3,.F.,"",.F.,Tamanho,,.T.)
+If nLastKey==27
+	dbClearFilter()
+	Return
+Endif
+SetDefault(aReturn,cString)
+If nLastKey==27
+	dbClearFilter()
+	Return
+Endif
+If mv_par01 > mv_par02 .Or. Empty(mv_par02)
+	Help('',1,'LIBRRD1001')
+	Return .T.
+Endif
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Executa relatorio                                            ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+RptStatus({|lEnd| LibRD1Imp(@lEnd,wnRel,cString,Tamanho)},titulo)
+
+If aReturn[5]==1
+	Set Printer To
+	ourspool(wnrel)
+Endif
+MS_FLUSH()
+
+Return
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³LibRD1Imp ³ Autor ³ Armando P. Waiteman   ³ Data ³ 18.12.96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Imprime Relatorio                                          ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+STATIC FUNCTION LibRD1Imp(lEnd,wnRel,cString,Tamanho)
+
+Local dDtIni		:= mv_par01
+Local dDtFim		:= mv_par02
+Local nAliq     	:= mv_par03
+Local nTotal        := 0
+Local nTotalDt      := 0
+Local nTotDtNt      := 0
+Local nTotalNt      := 0
+LOCAL limite := 128
+Local cCabec1:="  "+OemToAnsi(STR0009)+"      "+OemToAnsi(STR0010)+"     "+OemToAnsi(STR0011)+"   "+OemToAnsi(STR0012)+"       "+OemToAnsi(STR0013)+"    "+OemToAnsi(STR0014)
+Local cCabec2:= " "
+Local dDtEmis
+LOCAL CbTxt
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Variaveis usadas para o cabecalho³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cCGC	      :=TRANSFORM(SM0->M0_CGC,"@R 9-99-99999-9")  // RNC (Ident.Fiscal p/ Rep.Dominicana)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Controles da pagina ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local   nLin :=60
+Local   nLi  :=0
+
+cbtxt 	:= SPACE(10)
+cbcont 	:= 0
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Filtra o arquivo SF2 de acordo com os parametros³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cArqTemp:=FiltraArq(dDtIni,dDtFim)
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³Com o arquivo filtrado inicia a impressao do relatorio³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+While !EOF()
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Faz a impressao do Cabecalho das colunas³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nLi := Cabec(titulo,cCabec1,cCabec2,nomeprog,tamanho,IIF(aReturn[4]==1,Getmv("MV_NORM"),Getmv("MV_COMP")))
+	nLi +=1
+	@ nLi,02 PSAY OemToAnsi(STR0007)+cCGC  // RNC
+	@ nLi,28 PSAY OemToAnsi(STR0008)+SM0->M0_NOMECOM  // Razao Social
+	nLi+=1
+	@ nLi,00 PSAY Replicate("-",limite)
+	nLi+=1
+	dDtEmis:= F2_EMISSAO
+	
+	While !Eof()
+		If dDtEmis <> F2_EMISSAO
+			dDtEmis := F2_EMISSAO
+			@nLi,02 PSAY OemToAnsi(STR0018) // Total geral por data        ------------->>
+			@nLi,32 PSAY nTotDtNt Picture PesqPict("SF2","F2_VALBRUT")
+			@nLi,65 PSAY nTotalDt Picture PesqPict("SF2","F2_VALBRUT")
+			nTotalDt := 0
+			nTotDtNt := 0
+			nLi+=2
+		Endif
+		@nLi,02 PSAY F2_EMISSAO Picture PesqPict("SF2","F2_EMISSAO")
+		@nLi,12 PSAY F2_DOC
+		@nLi,26 PSAY F2_SERIE
+		@nLi,32 PSAY F2_VALBRUT Picture PesqPict("SF2","F2_VALBRUT")
+		@nLi,55 PSAY nAliq Picture "999,99"
+		@nLi,65 PSAY Round(F2_VALBRUT*nAliq/100,2) Picture PesqPict("SF2","F2_VALBRUT")
+		
+		nTotalDt := nTotalDt+(F2_VALBRUT*nALiq/100)    //Total Data Aliq
+		nTotDtNt := nTotDtNt+F2_VALBRUT                //Total Data Nota
+		nTotalNt := nTotalNt+F2_VALBRUT                //Total Geral Nota
+		nTotal   := nTotal+(F2_VALBRUT*nALiq/100)      //Total Geral Aliq
+		nLi+=1
+		dbSkip()
+		If nLi>nLin
+			nLi:=1
+			Exit
+		EndIf
+	Enddo
+	If nLastKey==27
+		@nLi,02 PSAY OemToAnsi(STR0015) // CANCELADO PELO OPERADOR
+		Return
+	EndIf
+Enddo
+
+IF nLi>0
+	@nLi,02 PSAY OemToAnsi(STR0018) // Total geral por data        ------------->>
+	@nLi,32 PSAY nTotDtNt Picture PesqPict("SF2","F2_VALBRUT")
+	@nLi,65 PSAY nTotalDt Picture PesqPict("SF2","F2_VALBRUT")
+	nLi+=3
+	@nLi,02 PSAY OemToAnsi(STR0016) // Total geral do imposto        ------------->>
+	@nLi,32 PSAY nTotalNt Picture PesqPict("SF2","F2_VALBRUT")
+	@nLi,65 PSAY nTotal Picture PesqPict("SF2","F2_VALBRUT")
+Else
+	nLi+=2
+	@nLi,02 PSAY OemToAnsi(STR0017) // Nao existem dados a apresentar
+Endif
+roda(cbcont,cbtxt,tamanho)
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³FiltraArq ³ Autor ³Armando P. Waiteman            ³ Data ³ 13/12/96 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Filtra o arquivo de facturas de saidas (SF2) de forma a conter      ³±±
+±±³          ³somente os registros contemplados pelos paramentros                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe   ³cArqTemp:=FiltraArq(cDtIni,dDtFim)                                  ³±±
+±±³          ³                                                                    ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³parametros³cAliasTemp:=Nome do arquivo de indice condicional gerado            ³±±
+±±³          ³dDtIni:=Data de Inicio dos Lancamentos                              ³±±
+±±³          ³dDtFim:=Data de Fim dos Lancamentos                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³LIBRRD1                                                             ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function FiltraArq(dDtIni,dDtFim)
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+Local cIndice
+Local cChave
+Local cCondicao
+Local nOrder
+
+cIndice :=CriaTrab(NIL,.F.)
+cChave:="DTOS(F2_EMISSAO)+F2_DOC"
+cCondicao:="Dtos(F2_EMISSAO)>= '"+Dtos(dDtIni)+"' .AND. Dtos(F2_EMISSAO)<= '"+Dtos(dDtFim)+"'"
+IndRegua("SF2",cIndice,cChave,,cCondicao,OemToAnsi(STR0006)) // "Selecionando Registros"
+nOrder	:=	RetIndex('SF2')
+#IFNDEF TOP
+	DbSetIndex(cIndice+OrdBagExt())
+#ENDIF
+DbSetOrder(nOrder+1)
+
+dbGoTop()
+
+Return(cIndice)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ CriaTMP  ³ Autor ³Liber de esteban               ³ Data ³ 11/05/06 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Cria tabelas temporarias a serem processadas no relatorio           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³LIBRRD1                                                             ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function CriaTMP()
+
+Local aStru := {}
+Local cArq	 := ""
+
+AADD(aStru,{"EMISSAO","D",08,0})
+AADD(aStru,{"DOC",    "C",06,0})
+AADD(aStru,{"SERIE",  "C",03,0})
+AADD(aStru,{"VALOR",  "N",14,2})
+AADD(aStru,{"ALIQ",   "N",06,2})
+AADD(aStru,{"TOTALIR","N",14,2})
+
+cArq := CriaTrab(aStru)
+dbUseArea(.T.,__LocalDriver,cArq,"TMP")
+IndRegua("TMP",cArq,"DTOS(EMISSAO)+DOC+SERIE")
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ AlimTMP  ³ Autor ³Liber de esteban               ³ Data ³ 11/05/06 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³Alimenta tabelas temporarias a serem processadas no relatorio       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³LIBRRD1                                                             ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function AlimTMP()
+
+Local cAliasSF2 := "SF2"
+Local nALiq     := mv_par03
+
+#IFDEF TOP
+
+	cAliasSF2 := GetNextAlias()
+	
+	BeginSql alias cAliasSF2
+	     column F2_EMISSAO as Date
+	     SELECT F2_DOC,F2_SERIE,F2_EMISSAO,F2_VALBRUT
+	     FROM %table:SF2% SF2
+	     WHERE F2_FILIAL = %xFilial:SF2%    AND 
+	     F2_EMISSAO >= %Exp:Dtos(mv_par01)% AND 
+		 F2_EMISSAO <= %Exp:Dtos(mv_par02)% AND
+         SF2.%notDel%
+	     ORDER BY F2_FILIAL,F2_EMISSAO,F2_DOC,F2_SERIE
+	EndSql
+	
+#ELSE
+
+	cIndex    := CriaTrab(NIL,.F.)
+	cChave    := "DTOS(F2_EMISSAO)+F2_DOC"
+	cCondicao := "F2_FILIAL == '"+xFilial("SF2")+"' .AND. "
+	cCondicao += "Dtos(F2_EMISSAO)>= '"+Dtos(mv_par01)+"' .AND. Dtos(F2_EMISSAO)<= '"+Dtos(mv_par02)+"'"
+	
+    IndRegua(cAliasSF2,cIndex,cChave,,cCondicao)
+   
+	#IFNDEF TOP
+		DbSetIndex(cIndex+OrdBagExt())
+	#ENDIF
+
+#ENDIF
+
+dbSelectArea(cAliasSF2)
+dbGoTop()
+
+While !((cAliasSF2)->(Eof()))
+
+	Reclock("TMP",.T.)
+		TMP->EMISSAO := (cAliasSF2)->F2_EMISSAO
+		TMP->DOC     := (cAliasSF2)->F2_DOC
+		TMP->SERIE   := (cAliasSF2)->F2_SERIE
+		TMP->VALOR   := (cAliasSF2)->F2_VALBRUT
+		TMP->ALIQ    := nAliq
+		TMP->TOTALIR := ((cAliasSF2)->F2_VALBRUT*nALiq/100)
+	MsUnLock()
+
+	dbSelectArea(cAliasSF2)
+	dbSkip()
+End
+
+Return
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³AjSX1LIBRDºAutor  ³  Liber de Esteban  º Data ³  11/05/06   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Ajusta arquivo de perguntas(SX1)                           º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ LIBRRD1      				                              º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function AjSX1LIBRD()
+
+Local cPerg	:="LIBRD1"
+Local aPergs   := {}
+Local aHelpPor := {}
+Local aHelpEng := {}
+Local aHelpSpa := {}
+
+Aadd(aHelpPor,"Data de inicio considerada pelo ")
+Aadd(aHelpPor,"relatorio.")
+Aadd(aHelpEng,"Date of beginning considered for ")
+Aadd(aHelpEng,"the report.")
+Aadd(aHelpSpa,"Fecha de inicio considerada por el")
+Aadd(aHelpSpa,"informe.")
+Aadd(aPergs,{  "A partir da data   ?","¨De la fecha       ?","From Date          ?","mv_ch1","D",8,0,0,"G","","mv_par01","","","","01/01/00","","","","","","","","","","","","","","","","","","","","","","","S","",aHelpPor,aHelpEng,aHelpSpa})
+
+aHelpPor	:= {}
+aHelpEng	:= {}
+aHelpSpa	:= {}
+
+Aadd(aHelpPor,"Data de termino considerada pelo ")
+Aadd(aHelpPor,"relatorio.")
+Aadd(aHelpEng,"Signoff date considered by the report.")
+Aadd(aHelpSpa,"Fecha de termino considerada por el")
+Aadd(aHelpSpa,"informe.")
+Aadd(aPergs,{  "Ate a data         ?","¨Hasta la fecha    ?","To Date            ?","mv_ch2","D",8,0,0,"G","","mv_par02","","","","31/12/06","","","","","","","","","","","","","","","","","","","","","","","S","",aHelpPor,aHelpEng,aHelpSpa})
+
+aHelpPor	:= {}
+aHelpEng	:= {}
+aHelpSpa	:= {}
+
+Aadd(aHelpPor,"Aliquota utilizada no relatorio e no ")
+Aadd(aHelpPor,"calculo dos totais.")
+Aadd(aHelpEng,"Tax Rate used in the report and the ")
+Aadd(aHelpEng,"calculation of the totals.")
+Aadd(aHelpSpa,"Alicuota utilizada en el informe y en el ")
+Aadd(aHelpSpa,"calculo de los totales.")
+Aadd(aPergs,{  "Aliquota           ?","¨Alicuota          ?","Tax Rate           ?","mv_ch3","N",6,2,0,"G","","mv_par03","","","","","","","","","","","","","","","","","","","","","","","","","","","S","",aHelpPor,aHelpEng,aHelpSpa})
+
+AjustaSx1(cPerg,aPergs)
+
+Return

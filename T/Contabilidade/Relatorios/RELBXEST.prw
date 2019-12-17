@@ -1,0 +1,350 @@
+#INCLUDE "rwmake.ch"
+#INCLUDE "Topconn.ch"
+
+/*
++------------------------------------------------------------------------------------+
+¦Programa  ¦           ¦ Autor ¦ Felipe Batista       				¦Data ¦10.04.2007¦
++----------+-------------------------------------------------------------------------¦
+¦Descricao ¦ Relatório Contabil de Entrada e Saídas                    				 ¦
++----------+-------------------------------------------------------------------------¦
+¦ Uso      ¦ ESPECIFICO PARA A USIFAST                                  			 ¦
++------------------------------------------------------------------------------------¦
+¦           ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL            			 ¦
++------------------------------------------------------------------------------------¦
+¦PROGRAMADOR ¦ DATA   ¦ MOTIVO DA ALTERACAO                             			 ¦
++------------+--------+--------------------------------------------------------------¦
+¦            ¦        ¦                                                				 ¦
++------------------------------------------------------------------------------------+
+*/
+
+User Function RELBXEST
+**************************************************************************************
+*
+*
+*******
+
+Local cDesc1        := "Este programa tem como objetivo imprimir relatorio "
+Local cDesc2        := "de acordo com os parametros informados pelo usuario."
+Local cDesc3        := ""
+Local cPict         := ""
+Local titulo        := "Relação de Saldos em estoque por Conta"
+Local nLin          := 80
+Local Cabec1        := ""
+Local Cabec2        := ""
+Local imprime       := .T.
+Local aOrd 			:= {}
+
+Private cPerg    	:= "SALEST"
+Private lEnd        := .F.
+Private lAbortPrint := .F.
+Private CbTxt       := ""
+Private limite      := 80          
+Private tamanho     := "P"
+Private nomeprog    := "RELBXEST" // Coloque aqui o nome do programa para impressao no cabecalho
+Private nTipo       := 18
+Private aReturn     := { "Zebrado", 1, "Administracao", 2, 2, 1, "", 1}
+Private nLastKey    := 0
+Private cbtxt       := Space(10)
+Private cbcont      := 00
+Private CONTFL      := 01
+Private m_pag       := 01
+Private wnrel       := "RELBXEST" // Coloque aqui o nome do arquivo usado para impressao em disco
+Private cString 	:= "SD3"
+
+AJUSTASX1(cPerg)
+pergunte(cPerg,.T.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Monta a interface padrao com o usuario...                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+wnrel := SetPrint(cString,NomeProg,"",@titulo,cDesc1,cDesc2,cDesc3,.T.,aOrd,.T.,Tamanho,,.T.)
+
+If nLastKey == 27
+	Return
+Endif
+
+SetDefault(aReturn,cString)
+
+If nLastKey == 27
+	Return
+Endif
+
+nTipo := If(aReturn[4]==1,15,18)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Processamento. RPTSTATUS monta janela com a regua de processamento. ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+RptStatus({|| RunReport(Cabec1,Cabec2,Titulo,nLin) },Titulo)
+Return
+
+Static Function RunReport(Cabec1,Cabec2,Titulo,nLin)
+
+Local nOrdem
+Local cConta	:= ""
+Local nValorEnt := 0
+Local nValorSai := 0
+Local nEntTotal := 0
+Local nSaiTotal := 0
+
+Consult()
+
+Cabec1:= PADC("PERIODO "+dtoc(mv_par01)+" A "+dtoc(mv_par02),78)
+If mv_par05 == 1
+	Cabec2:= " Conta        Descrição                            VLR. ENTRADA      VLR. SAIDA"
+Else
+	Cabec2:= " DOC.   FORNECEDOR                                 VLR. ENTRADA      VLR. SAIDA"
+Endif
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ SETREGUA -> Indica quantos registros serao processados para a regua ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+dbSelectArea("QRY")
+dbGoTop()
+
+SetRegua(RecCount())
+If mv_par05 == 1
+	nConta := conta
+Else 
+	nConta := ""
+Endif
+
+While !EOF()
+	
+	If lAbortPrint
+		@nLin,00 PSAY "*** CANCELADO PELO OPERADOR ***"
+		Exit
+	Endif
+	
+	If nLin > 55 // Salto de Página. Neste caso o formulario tem 55 linhas...
+		Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,nTipo)
+		nLin := 9
+	Endif
+	If mv_par05 == 1
+		If nConta == conta
+			If QRY->(SIT) = 'E'
+				nValorEnt += CUSTO
+			Else
+				nValorSai += CUSTO
+			Endif
+		Else
+			@nLin,00 PSAY nConta
+			nDesc := Posicione("CT1",1,XFILIAL("CT1")+nConta,"CT1_DESC01")
+			@nLin,12 PSAY nDesc
+			@nLin,50 PSAY transform(nValorEnt,"@E 99,999,999.99")
+			@nLin,66 PSAY transform(nValorSai,"@E 99,999,999.99")
+			nLin++
+			nEntTotal += nValorEnt
+			nSaiTotal += nValorSai
+			nValorEnt := 0
+			nValorSai := 0
+			nConta    := conta
+		Endif
+	Else
+		If nConta <> QRY->CONTA
+			nLin++
+			@nLin,01 PSAY QRY->CONTA
+			nLin++
+		Endif
+		If QRY->SIT == "E"
+			If ALLTRIM(QRY->DOCUMENTO) <> "ENT"
+				@nLin,01 PSAY QRY->DOCUMENTO
+				@nLin,08 PSAY Posicione("SA2",1,XFILIAL("SA2")+QRY->CLIFOR+QRY->LOJA,"A2_NREDUZ")
+			Else
+				@nLin,08 PSAY "CUSTO C/ DEVOLUCAO"
+			Endif
+			@nLin,50 PSAY transform(QRY->CUSTO,"@E 99,999,999.99")
+			nEntTotal := nEntTotal + QRY->CUSTO
+		Else
+			If ALLTRIM(QRY->DOCUMENTO) <> "SAI"
+				@nLin,01 PSAY QRY->DOCUMENTO
+				@nLin,08 PSAY Posicione("SA1",1,XFILIAL("SA1")+QRY->CLIFOR+QRY->LOJA,"A1_NREDUZ")
+			Else
+				@nLin,08 PSAY "CUSTO C/ REQUISICAO"
+			Endif
+			@nLin,66 PSAY transform(QRY->CUSTO,"@E 99,999,999.99")
+			nSaiTotal := nSaiTotal + QRY->CUSTO
+		Endif
+		nConta := QRY->CONTA
+		nLin++
+	Endif
+	/*	if mv_par05 == 1
+	@nLin,01 PSAY QRY->CONTA
+	@nLin,15 PSAY transform(QRY->ENT,"@E 99,999,999.999")
+	@nLin,27 PSAY transform(QRY->SAIDA,"@E 99,999,999.999")
+	endif
+	*/
+	dbSkip() // Avanca o ponteiro do registro no arquivo
+EndDo
+
+@ nLin,000 PSAY 	Replicate("*",79)
+nLin++
+@nLin,00 PSAY "TOTAL DAS MOVIMENTACOES"
+@nLin,50 PSAY transform(nEntTotal,"@E 99,999,999.99")
+@nLin,66 PSAY transform(nSaiTotal,"@E 99,999,999.99")
+nLin++
+@ nLin,000 PSAY 	Replicate("*",79)
+
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Finaliza a execucao do relatorio...                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Set Device to Screen
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Se impressao em disco, chama o gerenciador de impressao...          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+If aReturn[5]==1
+	dbCommitAll()
+	SET PRINTER TO
+	OurSpool(wnrel)
+Endif
+CLOSE
+MS_FLUSH()
+
+Return
+
+Static Function Consult()
+**************************************************************************************
+*
+*
+*******
+
+
+if mv_par05==1
+	
+	cQuery := "SELECT D1_CONTA CONTA ,SUM(D1_CUSTO) CUSTO,'E' SIT  "
+	cQuery += "FROM "+RetSqlName("SD1")+" SD1 "
+	cQuery += "INNER JOIN "+RetSqlName("SF4")+" SF4 "
+	cQuery += "ON SD1.D1_TES = F4_CODIGO "
+	cQuery += " AND D1_DTDIGIT BETWEEN '" +DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"'"
+	cQuery += " AND D1_CONTA   BETWEEN '" +MV_PAR03+"' AND '"+MV_PAR04+"'"
+	cQuery += " AND F4_ESTOQUE = 'S'  "
+	cQuery += " AND SF4.D_E_L_E_T_<> '*' "
+	cQuery += " AND SD1.<> '*' "
+	cQuery += "GROUP BY D1_CONTA  "
+	
+//	cQuery += "UNION ALL "
+	
+  //	cQuery += "SELECT D3_CTAEST  CONTA,SUM(D3_CUSTO1) CUSTO,'E' SIT "
+//	cQuery += "FROM "+RetSqlName("SD3")+" SD3 "
+//	cQuery += "WHERE SD3.D3_TM < '500'    "
+//	cQuery += " AND D3_EMISSAO BETWEEN '" +DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"'"
+//	cQuery += " AND D3_CTAEST   BETWEEN '" +MV_PAR03+"' AND '"+MV_PAR04+"'"
+//	cQuery += " AND SD3.D_E_L_E_T_<> '*' "
+//	cQuery += "GROUP BY D3_CTAEST "
+	
+//	cQuery += "UNION ALL "
+	
+//	cQuery += "SELECT D2_CTAEST CONTA ,SUM(D2_CUSTO1) CUSTO,'S' SIT  "
+//	cQuery += "FROM "+RetSqlName("SD2")+" SD2 "
+//	cQuery += "INNER JOIN "+RetSqlName("SF4")+" SF4 "
+//	cQuery += "ON   D2_TES = F4_CODIGO "
+//	cQuery += " AND D2_EMISSAO BETWEEN '" +DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"'"
+//	cQuery += " AND D2_CTAEST  BETWEEN '" +MV_PAR03+"' AND '"+MV_PAR04+"'"
+//	cQuery += " AND D2_TES > '500'  "
+//	cQuery += " AND F4_ESTOQUE = 'S'  "
+//	cQuery += " AND SF4.D_E_L_E_T_<> '*' "
+//	cQuery += " AND SD2.D_E_L_E_T_<> '*' "
+//	cQuery += "GROUP BY D2_CTAEST  "
+	
+//	cQuery += "UNION ALL "
+	
+//	cQuery += "SELECT D3_CTAEST  CONTA,SUM(D3_CUSTO1) CUSTO,'S' SIT "
+//	cQuery += "FROM "+RetSqlName("SD3")+" SD3 "
+//	cQuery += "WHERE D3_TM > '500'    "
+//	cQuery += " AND  D3_EMISSAO BETWEEN '" +DTOS(MV_PAR01)+"' AND '"+DTOS(MV_PAR02)+"'"
+//	cQuery += " AND  D3_CTAEST   BETWEEN '" +MV_PAR03+"' AND '"+MV_PAR04+"'"
+//	cQuery += " AND  SD3.D_E_L_E_T_<> '*' "
+//	cQuery += "GROUP BY D3_CTAEST "
+//  	cQuery += "ORDER BY CONTA "
+	
+	DbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), 'QRY', .F., .T.)
+	
+	/*
+	cQuery := "SELECT ISNULL(E.CONTA,S.CONTA) CONTA,ISNULL(SUM(E.CUSTO),0) ENT,ISNULL(SUM(S.CUSTO),0) SAIDA "
+	cQuery += "FROM cArqEnt E "
+	cQuery += "FULL OUTER JOIN cArqSai S "
+	cQuery += " ON E.CONTA=S.CONTA "
+	cQuery += "GROUP BY E.CONTA,S.CONTA"
+	
+	DbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), 'ENTSAI', .F., .T.)
+	*/
+	
+Else
+	
+	cQuery := "SELECT SD1.D1_DOC AS 'DOCUMENTO',SD1.D1_FORNECE AS 'CLIFOR',SD1.D1_LOJA AS 'LOJA',SD1.D1_CONTA AS 'CONTA',SUM(SD1.D1_CUSTO) AS 'CUSTO', 'E' AS SIT "
+	cQuery += "FROM "+RetSqlName("SD1")+" SD1 "
+	cQuery += "INNER JOIN "+RetSqlName("SF4")+" SF4 "
+	cQuery += "ON SD1.D1_TES=SF4.F4_CODIGO "
+	cQuery += "WHERE SD1.D1_DTDIGIT>='"+DTOS(MV_PAR01)+"' "
+	cQuery += "AND SD1.D1_DTDIGIT<='"+DTOS(MV_PAR02)+"' "
+	cQuery += "AND SF4.F4_ESTOQUE='S' "
+	cQuery += "AND SD1.D1_CONTA>='"+MV_PAR03+"' "
+	cQuery += "AND SD1.D1_CONTA<='"+MV_PAR04+"' "
+	cQuery += "AND SF4.D_E_L_E_T_<>'*' "
+	cQuery += "AND SD1.D_E_L_E_T_<>'*' "
+	cQuery += "GROUP BY SD1.D1_DOC,SD1.D1_FORNECE,SD1.D1_LOJA,SD1.D1_CONTA "
+	
+	cQuery += "UNION ALL "
+	
+	cQuery += "SELECT SD2.D2_DOC AS 'DOCUMENTO',SD2.D2_CLIENTE AS 'CLIFOR',SD2.D2_LOJA AS 'LOJA',SD2.D2_CTAEST AS 'CONTA',SUM(SD2.D2_CUSTO1) AS 'CUSTO', 'S' AS SIT "
+	cQuery += "FROM "+RetSqlName("SD2")+" SD2 "
+	cQuery += "INNER JOIN "+RetSqlName("SF4")+" SF4 "
+	cQuery += "ON SD2.D2_TES=SF4.F4_CODIGO "
+	cQuery += "WHERE SD2.D2_EMISSAO>='"+DTOS(MV_PAR01)+"' "
+	cQuery += "AND SD2.D2_EMISSAO<='"+DTOS(MV_PAR02)+"' "
+	cQuery += "AND SF4.F4_ESTOQUE='S' "
+	cQuery += "AND SD2.D2_CTAEST>='"+MV_PAR03+"' "
+	cQuery += "AND SD2.D2_CTAEST<='"+MV_PAR04+"' "
+	cQuery += "AND SF4.D_E_L_E_T_<>'*' "
+	cQuery += "AND SD2.D_E_L_E_T_<>'*' "
+	cQuery += "GROUP BY SD2.D2_DOC,SD2.D2_CLIENTE,SD2.D2_LOJA,SD2.D2_CTAEST "
+	
+	cQuery += "UNION ALL "
+	
+	cQuery += "SELECT 'ENT' AS DOCUMENTO,'EST' AS CLIFOR,'00' AS LOJA,SD3.D3_CTAEST AS 'CONTA',SUM(SD3.D3_CUSTO1) AS 'CUSTO','E' AS SIT "
+	cQuery += "FROM "+RetSqlName("SD3")+" SD3 "
+	cQuery += "WHERE SD3.D3_TM<='499' "
+	cQuery += "AND SD3.D3_EMISSAO>='"+DTOS(MV_PAR01)+"' "
+	cQuery += "AND SD3.D3_EMISSAO<='"+DTOS(MV_PAR02)+"' "
+	cQuery += "AND SD3.D3_CTAEST>='"+MV_PAR03+"' "
+	cQuery += "AND SD3.D3_CTAEST<='"+MV_PAR04+"' "
+	cQuery += "AND SD3.D_E_L_E_T_<>'*' "
+	cQuery += "GROUP BY SD3.D3_CONTA,SD3.D3_CTAEST,SD3.D3_CC,SD3.D3_ITEMCTA "
+	
+	cQuery += "UNION ALL "
+	
+	cQuery += "SELECT 'SAI' AS DOCUMENTO,'EST' AS CLIFOR,'00' AS LOJA,SD3.D3_CTAEST AS 'CONTA',SUM(SD3.D3_CUSTO1) AS 'CUSTO','S' AS SIT "
+	cQuery += "FROM "+RetSqlName("SD3")+" SD3 "
+	cQuery += "WHERE SD3.D3_TM>='500' "
+	cQuery += "AND SD3.D3_EMISSAO>='"+DTOS(MV_PAR01)+"' "
+	cQuery += "AND SD3.D3_EMISSAO<='"+DTOS(MV_PAR02)+"' "
+	cQuery += "AND SD3.D3_CTAEST>='"+MV_PAR03+"' "
+	cQuery += "AND SD3.D3_CTAEST<='"+MV_PAR04+"' "
+	cQuery += "AND SD3.D_E_L_E_T_<>'*' "
+	cQuery += "GROUP BY SD3.D3_CTAEST,SD3.D3_CONTA,SD3.D3_CC,SD3.D3_ITEMCTA "
+	cQuery += "ORDER BY CONTA,SIT "
+	
+	DbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), 'QRY', .F., .T.)
+	
+endif
+
+Return
+
+Static Function AjustaSX1(cperg)
+**************************************************************************************
+*
+*
+*******
+
+//PutSx1(cGrupo,cOrdem,cPergunt,cPerSpa,cPerEng,cVar,cTipo,nTamanho,nDecimal,nPresel,cGSC,cValid,cF3,cGrpSxg,cPyme,cVar01,cDef01,cDefSpa1,cDefEng1,cCnt01,cDef02,cDefSpa2,cDefEng2,cDef03,cDefSpa3,cDefEng3,cDef04,cDefSpa4,cDefEng4,cDef05,cDefSpa5,cDefEng5,aHelpPor,aHelpEng,aHelpSpa,cHelp)
+PutSx1(cPerg,"01","Data De ?","+De Fecha ?","From Date ?","mv_ch1","D", 8,0,0,"G","","","","","mv_par01","","","","","","","","","","","","","","","","")
+PutSx1(cPerg,"02","Data Ate ?","+A Fecha ?","To Date ?","mv_ch2","D", 8,0,1,"G","","","","","mv_par02","","","","","","","","","","","","","","","","")
+PutSx1(cPerg,"03","Conta Inicial ?","+Cuenta de Inicio ?","Initial Account ?","mv_ch3","C", 20,0,0,"G","","","","","mv_par03","","","","","","","","","","","","","","","","")
+PutSx1(cPerg,"04","Conta Final ?","+Cuenta Final ?","Final Account ?","mv_ch4","C", 20,0,0,"G","","","","","mv_par04","","","","","","","","","","","","","","","","")
+PutSx1(cPerg,"05","Tipo Relatorio ?","+Tipo de Informe ?","Report Type ?","mv_ch5","N", 1,0,2,"N","","","","","mv_par05","Sintetico","Sintetico","Sintetico","","Analitico","Analitico","Analitico","","","","","","","","","")
+Return

@@ -1,0 +1,21 @@
+#line 1 "E:\TOTVS\HOMOLOGACAO\PROTHEUS12\INCLUDES\rwmake.ch"
+#line 1 "E:\TOTVS\HOMOLOGACAO\PROTHEUS12\INCLUDES\stdwin.ch"
+#line 14 "rwmake.ch"
+#line 3 "e:\totvs\producao\protheus12\my projects\fin\sispag\agcc.prx"
+Function U_AGCC()
+
+
+
+
+
+
+
+
+SetPrvt("cAGCC,")
+
+
+
+	cCAGCC := STRZERO(VAL(SUBS(SA2->A2_AGENCIA,1,4)),5)+SPACE(01)+ STRZERO(VAL(SUBS(SA2->A2_NUMCON,1,8)),12)+ SPACE(01)+SUBS(SA2->A2_NUMCON,9,1)
+
+
+Return(cAGCC)

@@ -1,0 +1,356 @@
+#Include 'Protheus.ch'
+#INCLUDE "MSOLE.CH"
+//#INCLUDE "FATR600.CH"
+
+/*/{Protheus.doc} RELPVM
+
+ROTINA DE IMPRESSAO DA PROPOSTA COMERCIAL PERSONALIZADA DA VERMEER 
+	
+@author Cassiano Gonçalves Ribeiro
+@since 22/07/2016
+/*/
+user function RELPVM()
+
+	local aArea		:= GetArea()
+	local aAreasx 	:= LJ7GetArea({"ADZ","ADY","SX5","SA3","SA1","SE4","SB1"})						
+	local hWord 	:= ParamIXB[1]						
+	
+	if ADY->ADY_ENTIDA == "1"
+		cabecSA1(@hWord)
+	else
+		cabecSUS(@hWord)
+	endIf
+	
+	if type("cNomeWord") <> "U"
+		cNomeWord := 'Proposta Vemeer - ' + alltrim(ADY->ADY_PROPOS) + alltrim(ADY->ADY_PREVIS) + " - " + alltrim(Posicione("SA3",1,xFilial("SA3") + ADY->ADY_VEND,"A3_NOME"))
+	endIf
+	
+	detalhesProposta(@hWord)
+	
+	RestArea(aARea)
+	LJ7RestArea(aAreasx)
+return
+
+static function cabecSA1(hWord)
+	
+	dbSelectArea("SA1")
+	dbSetOrder(1)
+	if msSeek(xFilial("SA1") + ADY->ADY_CODIGO + ADY->ADY_LOJA)
+		
+		OLE_SetDocumentVar(hWord,'cProposta'	,ADY->ADY_PROPOS + ADY->ADY_PREVIS)
+		OLE_SetDocumentVar(hWord,'dData'		,Dtoc(ADY->ADY_DATA))
+		OLE_SetDocumentVar(hWord,'cNome'		,alltrim(SA1->A1_NOME))
+		OLE_SetDocumentVar(hWord,'cCGC'			,alltrim(transform(SA1->A1_CGC,pesqpict("SA1","A1_CGC"))))
+		OLE_SetDocumentVar(hWord,'cIE'			,alltrim(SA1->A1_INSCR))
+		OLE_SetDocumentVar(hWord,'cEndereco'	,alltrim(SA1->A1_END))
+		OLE_SetDocumentVar(hWord,'cBairro'		,alltrim(SA1->A1_BAIRRO))			
+		OLE_SetDocumentVar(hWord,'cCidade'		,alltrim(SA1->A1_MUN))
+		OLE_SetDocumentVar(hWord,'cUF'			,alltrim(SA1->A1_EST))
+		OLE_SetDocumentVar(hWord,'cCEP'			,alltrim(SA1->A1_CEP))
+		OLE_SetDocumentVar(hWord,'cTelefone'	,alltrim(SA1->A1_DDD) + " - " + alltrim(SA1->A1_TEL))
+		OLE_SetDocumentVar(hWord,'cEmail'		,mailSA1())
+		OLE_SetDocumentVar(hWord,'cContato'		,contCli())
+		OLE_SetDocumentVar(hWord,'cPrazo'		,if(!empty(ADY->ADY_ZZPREN),alltrim(Posicione("SX5",1,xFilial("SX5") + "ZY" + ADY->ADY_ZZPREN,"X5_DESCRI")),""))
+		OLE_SetDocumentVar(hWord,'cCondicao'	,Posicione("SE4",1,xFilial("SE4") + ADY->ADY_CONDPG,"E4_DESCRI"))
+		OLE_SetDocumentVar(hWord,'cObs'			,alltrim(ADY->ADY_OBS))
+		OLE_SetDocumentVar(hWord,'cValidade'	,dtoc(ADY->ADY_DATA + pegaSomaVld()))
+		OLE_SetDocumentVar(hWord,'cNomeVen'		,alltrim(Posicione("SA3",1,xFilial("SA3") + ADY->ADY_VEND,"A3_NOME")))
+		OLE_SetDocumentVar(hWord,'cEmailVen'	,alltrim(Posicione("SA3",1,xFilial("SA3") + ADY->ADY_VEND,"A3_EMAIL")))
+		OLE_SetDocumentVar(hWord,'cTelVen'		,alltrim(Posicione("SA3",1,xFilial("SA3") + ADY->ADY_VEND,"A3_DDDTEL")) + " - " +;
+												 alltrim(Posicione("SA3",1,xFilial("SA3") + ADY->ADY_VEND,"A3_TEL")))
+		OLE_SetDocumentVar(hWord,'cNomeGer'		,retNomGerente(ADY->ADY_VEND))
+		OLE_SetDocumentVar(hWord,'cEmailGer'	,retMailGerente(ADY->ADY_VEND))
+		
+	endif
+	
+return
+
+static function cabecSUS(hWord)
+
+	dbSelectArea("SUS")
+	dbSetOrder(1)
+	if msSeek(xFilial("SUS")+ADY->ADY_CODIGO+ADY->ADY_LOJA)
+		
+		OLE_SetDocumentVar(hWord,'cProposta'	,ADY->ADY_PROPOS + ADY->ADY_PREVIS)
+		OLE_SetDocumentVar(hWord,'dData'		,Dtoc(ADY->ADY_DATA))
+		OLE_SetDocumentVar(hWord,'cNome'		,alltrim(SUS->US_NOME))
+		OLE_SetDocumentVar(hWord,'cCGC'			,alltrim(transform(SUS->US_CGC,pesqpict("SUS","US_CGC"))))
+		OLE_SetDocumentVar(hWord,'cIE'			,alltrim(SUS->US_INSCR))
+		OLE_SetDocumentVar(hWord,'cEndereco'	,alltrim(SUS->US_END))
+		OLE_SetDocumentVar(hWord,'cBairro'		,alltrim(SUS->US_BAIRRO))			
+		OLE_SetDocumentVar(hWord,'cCidade'		,alltrim(SUS->US_MUN))
+		OLE_SetDocumentVar(hWord,'cUF'			,alltrim(SUS->US_EST))
+		OLE_SetDocumentVar(hWord,'cCEP'			,alltrim(SUS->US_CEP))
+		OLE_SetDocumentVar(hWord,'cTelefone'	,alltrim(SUS->US_DDD) + " - " + alltrim(SUS->US_TEL))
+		OLE_SetDocumentVar(hWord,'cEmail'		,mailSUS())
+		OLE_SetDocumentVar(hWord,'cContato'		,contContato())
+		OLE_SetDocumentVar(hWord,'cPrazo'		,if(!empty(ADY->ADY_ZZPREN),alltrim(Posicione("SX5",1,xFilial("SX5") + "ZY" + ADY->ADY_ZZPREN,"X5_DESCRI")),""))
+		OLE_SetDocumentVar(hWord,'cCondicao'	,Posicione("SE4",1,xFilial("SE4") + ADY->ADY_CONDPG,"E4_DESCRI"))
+		OLE_SetDocumentVar(hWord,'cObs'			,alltrim(ADY->ADY_OBS))
+		OLE_SetDocumentVar(hWord,'cValidade'	,dtoc(ADY->ADY_DATA + pegaSomaVld()))
+		OLE_SetDocumentVar(hWord,'cNomeVen'		,alltrim(Posicione("SA3",1,xFilial("SA3") + ADY->ADY_VEND,"A3_NOME")))
+		OLE_SetDocumentVar(hWord,'cEmailVen'	,alltrim(Posicione("SA3",1,xFilial("SA3") + ADY->ADY_VEND,"A3_EMAIL")))
+		OLE_SetDocumentVar(hWord,'cTelVen'		,alltrim(Posicione("SA3",1,xFilial("SA3") + ADY->ADY_VEND,"A3_DDDTEL")) + " - " +;
+												 alltrim(Posicione("SA3",1,xFilial("SA3") + ADY->ADY_VEND,"A3_TEL")))
+		OLE_SetDocumentVar(hWord,'cNomeGer'		,retNomGerente(ADY->ADY_VEND))
+		OLE_SetDocumentVar(hWord,'cEmailGer'	,retMailGerente(ADY->ADY_VEND))
+	endIf
+	
+return
+
+static function detalhesProposta(hWord)
+	
+	local nI 		:= 0
+	local nTotProsp := 0
+	local cSimbMoeda:= ""
+	local cMoedaADZ := ""
+	
+	DbSelectArea("ADZ")
+	DbSetOrder(3)
+	if dbSeek(xFilial("ADZ")+ADY->ADY_PROPOS+ADY->ADY_PREVIS)
+		
+		while ADZ->(!Eof()) .and. xFilial("ADZ") == ADZ->ADZ_FILIAL .AND. ADY->ADY_PROPOS == ADZ->ADZ_PROPOS .AND.;
+																		  ADY->ADY_PREVIS == ADZ->ADZ_REVISA	
+			
+			nI++
+			cSimbMoeda := alltrim(getMv("MV_SIMB" + ADZ->ADZ_MOEDA))
+			cMoedaADZ  := ADZ->ADZ_MOEDA
+			
+			OLE_SetDocumentVar(hWord,"item"+Alltrim(str(nI))  		,ADZ->ADZ_ITEM)
+			OLE_SetDocumentVar(hWord,"produto"+Alltrim(str(nI)) 	,Alltrim(Posicione("SB1",1,xFilial("SB1") + ADZ->ADZ_PRODUT,"B1_DESC")))
+			OLE_SetDocumentVar(hWord,"ncm"+Alltrim(str(nI))			,Alltrim(Posicione("SB1",1,xFilial("SB1") + ADZ->ADZ_PRODUT,"B1_POSIPI")))
+			OLE_SetDocumentVar(hWord,"quantidade"+Alltrim(str(nI)) 	,Alltrim(Transform(ADZ->ADZ_QTDVEN,pesqpict("ADZ","ADZ_QTDVEN"))))
+			OLE_SetDocumentVar(hWord,"vunitario"+Alltrim(str(nI)) 	,cSimbMoeda + " " + Alltrim(Transform(ADZ->ADZ_PRCVEN,pesqpict("ADZ","ADZ_PRCVEN"))))
+			OLE_SetDocumentVar(hWord,"desconto"+Alltrim(str(nI)) 	,cSimbMoeda + " " + Alltrim(Transform(ADZ->ADZ_DESCON,pesqpict("ADZ","ADZ_DESCON"))))
+			OLE_SetDocumentVar(hWord,"vliquido"+Alltrim(str(nI)) 	,cSimbMoeda + " " + Alltrim(Transform(ADZ->ADZ_TOTAL,pesqpict("ADZ","ADZ_TOTAL"))))
+			
+			nTotProsp += ADZ->ADZ_TOTAL
+			
+			ADZ->(dbSkip())
+			
+		endDo
+		
+		if nI > 0
+//			OLE_SetDocumentVar(hWord,'nVTotal', cSimbMoeda + " " + Alltrim(Transform(nTotProsp,pesqpict("ADZ","ADZ_TOTAL"))))
+			OLE_SetDocumentVar(hWord,'nVTotal', cSimbMoeda + " " + Extenso(nTotProsp ,,val(cMoedaADZ)))
+		endIf
+		
+	endIf
+	
+	if nI > 0
+		
+		OLE_SetDocumentVar(hWord,'nItens_proposta',alltrim(Str(nI)))
+		OLE_ExecuteMacro(hWord,"tabitens") 
+		
+	endIf
+	
+return
+
+static function mailSA1()
+	
+	local cAlias 		:= getNextAlias()
+	local cMailContato	:= ""
+	local cChave 		:= SA1->A1_COD + SA1->A1_LOJA
+	
+	beginSql Alias cAlias
+		SELECT U5_EMAIL
+	      FROM %TABLE:AC8% AC8
+	      	   INNER JOIN %TABLE:SA1% A1
+	      	           ON A1_FILIAL = %XFILIAL:SA1%
+	      	          AND A1_COD+A1_LOJA = %exp:cChave%
+	      	          AND A1.%NOTDEL%
+	      	   INNER JOIN %TABLE:SU5% U5
+	      	           ON %XFILIAL:SU5% = U5_FILIAL
+	      	          AND U5_CODCONT = AC8_CODCON
+	      	          AND U5.%NOTDEL%
+	     WHERE %XFILIAL:AC8% = AC8_FILIAL
+	       AND AC8_ENTIDA = "SA1"
+	       AND AC8_CODENT = %exp:cChave%
+	       AND AC8.%NOTDEL%
+	      ORDER BY AC8.R_E_C_N_O_
+	endSql
+	
+	(cAlias)->(dbGoTop())
+	
+	if !( (cAlias)->(Eof()) )
+		cMailContato := (cAlias)->U5_EMAIL
+	EndIf
+		
+	(cAlias)->(dbCloseArea())
+	
+return cMailContato
+
+static function mailSUS()
+	
+	local cAlias 		:= getNextAlias()
+	local cMailContato	:= ""
+	local cChave 		:= SUS->US_COD + SUS->US_LOJA
+	
+	beginSql Alias cAlias
+		SELECT U5_EMAIL
+	      FROM %TABLE:AC8% AC8
+	      	   INNER JOIN %TABLE:SUS% US
+	      	           ON US_FILIAL = %XFILIAL:SUS%
+	      	          AND US_COD+US_LOJA = %exp:cChave%
+	      	          AND US.%NOTDEL%
+	      	   INNER JOIN %TABLE:SU5% U5
+	      	           ON %XFILIAL:SU5% = U5_FILIAL
+	      	          AND U5_CODCONT = AC8_CODCON
+	      	          AND U5.%NOTDEL%
+	     WHERE %XFILIAL:AC8% = AC8_FILIAL
+	       AND AC8_ENTIDA = "SUS"
+	       AND AC8_CODENT = %exp:cChave%
+	       AND AC8.%NOTDEL%	
+	       ORDER BY AC8.R_E_C_N_O_	
+	endSql
+	
+	(cAlias)->(dbGoTop())
+	
+	if !( (cAlias)->(Eof()) )
+		cMailContato := (cAlias)->U5_EMAIL
+	endIf
+		
+	(cAlias)->(dbCloseArea())
+	
+return cMailContato
+
+static function contCli()
+
+	local cAlias 		:= getNextAlias()
+	local cNomeContato	:= ""
+	local cChave 		:= SA1->A1_COD + SA1->A1_LOJA
+	
+	beginSql Alias cAlias
+		SELECT U5_CONTAT
+	      FROM %TABLE:AC8% AC8
+	      	   INNER JOIN %TABLE:SU5% U5
+	      	           ON %XFILIAL:SU5% = U5_FILIAL
+	      	          AND U5_CODCONT = AC8_CODCON
+	      	          AND U5.%NOTDEL%	      	   
+	     WHERE %XFILIAL:AC8% = AC8_FILIAL
+	       AND AC8_ENTIDA = "SA1"
+	       AND AC8_CODENT = %exp:cChave%
+	       AND AC8.%NOTDEL%
+	       ORDER BY AC8.R_E_C_N_O_		
+	endSql
+	
+	(cAlias)->(dbGoTop())
+	
+	if !( (cAlias)->(Eof()) )
+		cNomeContato := (cAlias)->U5_CONTAT
+	EndIf
+		
+	(cAlias)->(dbCloseArea())
+	
+return cNomeContato
+
+static function contContato()
+
+	local cAlias 		:= getNextAlias()
+	local cNomeContato	:= ""
+	local cChave 		:= SUS->US_COD + SUS->US_LOJA
+	
+	beginSql Alias cAlias
+		SELECT U5_CONTAT
+	      FROM %TABLE:AC8% AC8
+	      	   INNER JOIN %TABLE:SU5% U5
+	      	           ON %XFILIAL:SU5% = U5_FILIAL
+	      	          AND U5_CODCONT = AC8_CODCON
+	      	          AND U5.%NOTDEL%	      	   
+	     WHERE %XFILIAL:AC8% = AC8_FILIAL
+	       AND AC8_ENTIDA = "SUS"
+	       AND AC8_CODENT = %exp:cChave%
+	       AND AC8.%NOTDEL%
+	       ORDER BY AC8.R_E_C_N_O_		
+	endSql
+	
+	(cAlias)->(dbGoTop())
+	
+	if !( (cAlias)->(Eof()) )
+		cNomeContato := (cAlias)->U5_CONTAT
+	EndIf
+		
+	(cAlias)->(dbCloseArea())
+	
+return cNomeContato
+
+static function pegaSomaVld()
+	
+	local nRet 		:= 0
+	local cAlias 	:= getNextAlias()
+	
+	beginSql Alias cAlias
+		SELECT ADZ_MOEDA
+	      FROM %TABLE:ADZ% ADZ
+	     WHERE %XFILIAL:ADZ% = ADZ_FILIAL
+	       AND ADZ_PROPOS = %exp:ADY->ADY_PROPOS%
+	       AND ADZ_REVISA = %exp:ADY->ADY_PREVIS%
+	       AND ADZ_MOEDA = '4'
+	       AND ADZ.%NOTDEL%		
+	endSql
+	
+	(cAlias)->(dbGoTop())
+		
+	if !( (cAlias)->(Eof()) )
+		nRet := 15
+	else
+		nRet := 7
+	endIf
+		
+	(cAlias)->(dbCloseArea())
+	
+return (nRet)
+
+static function retNomGerente(cCodVend)
+	
+	local cAlias 	:= getNextAlias()
+	local cNomeGer 	:= ""
+		
+	beginSql Alias cAlias
+		SELECT SA3B.A3_NOME AS A3NOMGER
+	      FROM %TABLE:SA3% SA3
+	      	   INNER JOIN %TABLE:SA3% SA3B
+	      	           ON SA3B.A3_FILIAL = SA3.A3_FILIAL
+	      	          AND SA3B.A3_COD = SA3.A3_GEREN
+	      	          AND SA3B.%NOTDEL% 
+	     WHERE %XFILIAL:SA3% = SA3.A3_FILIAL
+	       AND SA3.A3_COD = %EXP:cCodVend%
+	       AND SA3.%NOTDEL%		
+	endSql
+		
+	(cAlias)->(dbGoTop())
+	
+	if ( (cAlias)->(!Eof()) )
+		cNomeGer := (cAlias)->A3NOMGER
+	EndIf
+	
+	(cAlias)->(dbCloseArea())
+	
+return (cNomeGer)
+
+static function retMailGerente(cCodVend)
+	
+	local cAlias 	:= getNextAlias()
+	local cMailGer 	:= ""
+		
+	beginSql Alias cAlias
+		SELECT SA3B.A3_EMAIL AS A3MAILGER
+	      FROM %TABLE:SA3% SA3
+	      	   INNER JOIN %TABLE:SA3% SA3B
+	      	           ON SA3B.A3_FILIAL = SA3.A3_FILIAL
+	      	          AND SA3B.A3_COD = SA3.A3_GEREN
+	      	          AND SA3B.%NOTDEL% 
+	     WHERE %XFILIAL:SA3% = SA3.A3_FILIAL
+	       AND SA3.A3_COD = %EXP:cCodVend%
+	       AND SA3.%NOTDEL%		
+	endSql
+		
+	(cAlias)->(dbGoTop())
+	
+	if ( (cAlias)->(!Eof()) )
+		cMailGer := (cAlias)->A3MAILGER
+	EndIf
+	
+	(cAlias)->(dbCloseArea())
+	
+return (cMailGer)

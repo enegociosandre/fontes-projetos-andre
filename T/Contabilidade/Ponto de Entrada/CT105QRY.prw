@@ -1,0 +1,74 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³CT105QRY  ºAutor  ³Ademar Jr.          º Data ³  07/01/09   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Este programa tem a funcao de adicionar na query de        º±±
+±±º          ³ contabilização campos personalizados do Cliente.           º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ SIGACTB                                                    º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+User Function CT105QRY
+Local cRet := ParamIxb[1] && Recebe a query original.     
+Local	lAglutin	:=	.F.
+Local	cAux		:=	''
+
+If AllTrim(FunName()) == "FINA280" .Or. AllTrim(FunName()) == "FINA750" .OR. AllTrim(FunName()) =='GPEM110'
+	Return cRet
+EndIf
+
+If MV_PAR02 == 1 
+	&& Se for aglutinar    
+	If At("GROUP BY",cRet)>0
+		lAglutin := .T.
+		cAux		:=	'MIN'
+	Else
+		lAglutin := .F.    
+		cAux		:=	''
+	EndIf      
+	
+	&& Insere nome do campo a ser transportado para o CT2.
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZDOC) CTK_ZZDOC ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZFIL) CTK_ZZFIL ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZSERI) CTK_ZZSERI ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZFORN) CTK_ZZFORN ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZLOJF) CTK_ZZLOJF ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZCLIE) CTK_ZZCLIE ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZLOJC) CTK_ZZLOJC ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZTPNF) CTK_ZZTPNF ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZPREF) CTK_ZZPREF ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZNUM) CTK_ZZNUM ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZPARC) CTK_ZZPARC ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZTPTI) CTK_ZZTPTI ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZMOED) CTK_ZZMOED ")
+	cRet := Stuff(cRet,At("FROM",cRet),0,", "+cAux+"(CTK_ZZRECP) CTK_ZZRECP ")
+	
+	
+	&& Insere o nome do campo a ser considerado na aglutinacao.
+	If lAglutin
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZDOC ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZFIL ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZSERI ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZFORN ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZLOJF ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZCLIE ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZLOJC ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZTPNF ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZPREF ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZNUM ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZPARC ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZTPTI ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZMOED ")
+		cRet := Stuff(cRet,At("ORDER BY",cRet),0,", CTK_ZZRECP ")
+	EndIf
+EndIf
+
+Return cRet

@@ -1,0 +1,1380 @@
+#INCLUDE "ATFR070.CH"
+#Include "Protheus.ch" 
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ ATFR070    ³ Autor ³ Cesar C S Prado       ³ Data ³ 05.08.94 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Posi‡„o Valorizada dos Bens                                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ ATFR070                                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ SIGAATF                                                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User Function UATFR070()
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Define Variaveis                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+LOCAL cString := "SN3"
+LOCAL cDesc1    := OemToAnsi(STR0001) // "Este programa ir  emitir a posi‡„o valorizada dos"
+LOCAL cDesc2    := OemToAnsi(STR0002) //"bens em ate 5 (cinco) moedas."
+LOCAL cDesc3    := ""
+LOCAL wnrel
+
+PRIVATE aReturn  := { OemToAnsi(STR0014), 1,OemToAnsi(STR0015), 2, 2, 1, "",1 }  //"Zebrado"###"Administracao"
+PRIVATE aLinha   := { }
+PRIVATE cPerg    := "AFR070"
+PRIVATE nomeprog := "ATFR070"
+PRIVATE nLastKey := 0
+PRIVATE tamanho   := "G"
+
+PRIVATE titulo    := OemToAnsi(STR0003) //"Posicao Valorizada dos Bens"
+PRIVATE cabec1
+PRIVATE cabec2
+
+PRIVATE cQuebra1 := " .t. "
+PRIVATE cCond1   := " .t. "
+PRIVATE nOrdem   :=0
+PRIVATE nOrder
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Verifica as perguntas selecionadas                           ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+AjustaSX1()
+pergunte("AFR070",.F.)
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para parametros                        ³
+//³ mv_par01            // Data Conta                           ³
+//³ mv_par02            // Ate a Conta                          ³
+//³ mv_par03            // Do Centro Custo                      ³
+//³ mv_par04            // Ate o Centro Custo                   ³
+//³ mv_par05            // Analitico / Sintetico                ³
+//³ mv_par06            // Moeda 2 (S/N)                        ³
+//³ mv_par07            // Moeda 3 (S/N)                        ³
+//³ mv_par08            // Moeda 4 (S/N)                        ³
+//³ mv_par09            // Moeda 5 (S/N)                        ³
+//³ mv_par10            // Considera Baixas (S/N)               ³
+//³ mv_par10            // Considera Baixas:                    ³  
+//³							1-Todas                             ³
+//³							2-Nenhuma                           ³
+//³							3-Ate Calculo                       ³
+//³							4-Apos Calculo                      ³
+//³							5-Mes Calculo                       ³
+//³ mv_par11            // Pagina Inicial                       ³
+//³ mv_par12            // Pagina Final                         ³
+//³ mv_par13            // Numero da Pag p/ Reiniciar           ³
+//³ mv_par14            // Imprime Total Baixas (S/N)          ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+wnrel := "ATFR070"
+aOrd  := { OemToAnsi(STR0016), OemToAnsi(STR0017), OemToAnsi(STR0021), OemToAnsi(STR0022) }   //"Conta"###"C Custo"
+
+///N3_FILIAL+N3_SUBCTA+N3_CCUSTO+N3_CCONTAB+N3_CBASE+N3_ITEM+N3_TIPO (ORDEM 5)
+wnrel := SetPrint(cString,wnrel,cPerg,@titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd,,Tamanho)
+
+If nLastKey == 27
+	Return
+End
+
+SetDefault(aReturn,cString)
+
+nOrdem := aReturn[8]
+titulo += OemtoAnsi(STR0018)+aOrd[nOrdem]
+IF nOrdem == 1
+	cabec1 :=OemToAnsi(STR0004) //"C. Custo        Cod. Base  Item Tp Descricao sintetica                 Aquisic.   Dt.Baixa    Quantidade  Chapa                      "
+	nOrder := 4
+ElseIf nOrdem == 2
+	cabec1 :=OemToAnsi(STR0005) //"Conta           Cod. Base  Item Tp Descricao sintetica                 Aquisic.   Dt.Baixa    Quantidade  Chapa                      "
+	nOrder := 5
+ElseIf nOrdem == 3
+	cabec1 :=OemToAnsi(STR0023) //"Cuenta               Cod. Base  Item Tp Descripc. sintetica                 Adquis.    Fch Reg.    Cantidad    Chapita C.Custo    Clas.Vlr."
+	nOrder := 6
+ElseIf nOrdem == 4
+	cabec1 :=OemToAnsi(STR0024) //"Cuenta               Cod. Base  Item Tp Descripc. sintetica                 Adquis.    Fch Reg.    Cantidad    Chapita Item.Ctb.  C.Custo  "
+	nOrder := 7
+End
+cabec2 :=OemToAnsi(STR0006) //"       VLR AMPLIACAO     VALOR ORIGINAL    VALOR ATUALIZADO  DEPREC. NO MES DEPREC. NO EXERC.   DEPREC. ACUMULADA   CORR.MON. MES  CORR. MON.EXERC.  CORR. MONET. ACUM.  CORR.DEPR. MES  CORR.DEPR.EXERC.  CORR. DEPR.  ACUM."
+*                                                   999,999,999,999,99  99.999.999.9999,99 9999.999.999,99 99.999.999.999,99 .999.999.999.999,99 .999.999.999,99 99,999,999,999,99 .999.999.999.999,99 .999.999.999,99 99.999.999.999,99 .999.999.999.999,99
+*                              01234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901234^678901
+*                                        1         2         3         4         5         6         7         8         9         0         1         2         3         4         5         6         7         8         9         0         1         2 
+*                                                                                                                                  1                                                                                                   2                     
+If nLastKey == 27
+	Return
+End
+
+RptStatus({|lEnd| FR070Imp(@lEnd,wnRel,cString)},Titulo)
+Return
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ FR070Imp   ³ Autor ³ Claudinei           ³ Data ³ 19.09.93 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Posi‡„o Valorizada dos Bens                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ FR070Imp(End,wnRel,cString)                                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ lEnd    - A‡Æo do Codeblock                                ³±±
+±±³          ³ wnRel   - T¡tulo do relat¢rio                              ³±±
+±±³          ³ cString - Mensagem                                         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Gen‚rico                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³         ATUALIZACOES SOFRIDAS DESDE A CONSTRU€AO INICIAL.             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Programador ³ Data   ³ BOPS ³  Motivo da Alteracao                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³C. Denardi  ³06/10/03³66.785³Localizacao de casas decimais na Picture  ³±±
+±±³            ³        ³      ³em todos os relatorios do Ativo Fixo      ³±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+Static Function FR070Imp (lEnd,wnRel,cString)
+
+LOCAL cCabCond1  	:= ""
+LOCAL cCabCond2  	:= ""
+LOCAL aTotGeral  	:= {}
+LOCAL aTQuebra1  	:= {}
+Local aTotBaixa	 	:= {}
+Local aTotGBx	  	:= {}
+Local nSuf       		:= 0
+LOCAL nMoedas    	:= 1
+LOCAL lDescricao 	:= .F.
+LOCAL limite     	:= 220
+LOCAL cMoedas    	:= "S"
+LOCAL CbTxt
+LOCAL cbCont
+LOCAL nQuantidade 	:= 0
+Local nQuantBx		:= 0
+Local nTotal 	 		:= 0
+Local nTotBx 	 	:= 0
+Local dUltDepr   	:= GetMv("MV_ULTDEPR")
+Local cDia 		 	:= Space(2)
+Local cMes 		 	:= Space(2)
+Local cAno 		 	:= Space(2)
+Local cUltDepr
+Local cGrupoPass 	:= GetMv("MV_GRPASS")
+Local lCtb 		 	:= CtbInUse()
+Local cAliasQry
+Local cFilterUser:=aReturn[7]
+Local nCount        := 0
+Local cAtfCont	 := GetMv("MV_ATFCONT")
+Local nColITEM	 := 118
+Local nColCLVL	 := 127
+Local nCpo		 := 1
+dbSelectArea("SN1")
+nColITEM := 176+Len(SN1->N1_CHAPA)+1
+
+dbSelectArea("SN3")
+dbSetOrder ( nOrder )
+cOrdem	:= IndexKey()
+nColCLVL := nColITEM+Len(SN3->N3_SUBCTA)+1
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+ //³ Localiza registro inicial                                                 ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IF nOrdem == 1
+	cCabCond1 := OemToAnsi(STR0007) //"Conta   : "
+	cCabCond2 := OemToAnsi(STR0008) //"C.Custo : "
+ElseIf nOrdem == 2
+	cCabCond1 := OemToAnsi(STR0008) //"C.Custo : "
+	cCabCond2 := OemToAnsi(STR0007) //"Conta   : "
+ElseIf nOrdem == 3
+	cCabCond1 := OemToAnsi(STR0021) //"It.Ctb. : "
+	cCabCond2 := OemToAnsi(STR0007) //"Conta   : "
+ElseIf nOrdem == 4
+	cCabCond1 := OemToAnsi(STR0022) //"It.Ctb. : "
+	cCabCond2 := OemToAnsi(STR0007) //"Conta   : "
+EndIf
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Zera os arquivos de acumulado                                             ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+For nCount := 1 To 5
+	AAdd(aTotGeral, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} )
+	AAdd(aTQuebra1, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} )
+	AAdd(aTotBaixa, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} )
+	AAdd(aTotGBx, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} )
+Next
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Variaveis utilizadas para Impressao do Cabecalho e Rodape    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+cbtxt  := SPACE(10)
+cbcont := 0
+li      := 80
+m_pag	:= mv_par11
+
+cMoedas += IIF(MV_PAR06 == 1, "S", "N");    nMoedas += IIF(MV_PAR06 == 1, 1, 0)
+cMoedas += IIF(MV_PAR07 == 1, "S", "N");    nMoedas += IIF(MV_PAR07 == 1, 1, 0)
+cMoedas += IIF(MV_PAR08 == 1, "S", "N");    nMoedas += IIF(MV_PAR08 == 1, 1, 0)
+cMoedas += IIF(MV_PAR09 == 1, "S", "N");    nMoedas += IIF(MV_PAR09 == 1, 1, 0)
+
+#IFDEF TOP
+	If TcSrvType() <> "AS/400"
+		cAliasQry := "SN3TMP"
+		cQuery := " SELECT * FROM "+RetSqlName("SN3")+" "
+		cQuery += " WHERE N3_FILIAL = '" + xFilial("SN3") + "' AND "
+		cQuery += " N3_CCONTAB >= '"+mv_par01+"' AND "
+		cQuery += " N3_CCONTAB <= '"+mv_par02+"' AND "
+		cQuery += " N3_CCUSTO >= '"+mv_par03+"' AND "
+		cQuery += " N3_CCUSTO <= '"+mv_par04+"' AND "
+		cQuery += " D_E_L_E_T_ <> '*' "
+		cOrdem	:= SqlOrder(cOrdem)
+		cQuery += " ORDER BY "+cOrdem
+		cQuery := ChangeQuery(cQuery)
+		If Select("SN3TMP") > 0
+			dbSelectArea("SN3TMP")
+			dbCloseArea()
+		EndIf
+		dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),"SN3TMP",.T.,.T.)
+		
+		aCpos := SN3->(dbStruct())
+		For nCpo := 1 To Len(aCpos)
+			// Avalia a estrutura do arquivo a ser aberto. Se o campo estiver na query e for diferente 
+			// de caracter, altera o atributo do campo.
+			If aCpos[nCpo][2] <> "C" .And. (cAliasQry)->(FieldPos(aCpos[nCpo][1])) > 0
+				TCSetField("SN3TMP",aCpos[nCpo][1],aCpos[nCpo][2],aCpos[nCpo][3], aCpos[nCpo][4])
+			Endif
+		Next		
+	Else
+#ENDIF
+	cAliasQry := "SN3"
+	cFiltro  := "N3_FILIAL = '" + xFilial("SN3") + "' .And. N3_CCONTAB >= '"+mv_par01+"' .And. N3_CCONTAB <= '" + mv_par02 +;
+			 "' .And. N3_CCUSTO >= '" + mv_par03 + "' .And. N3_CCUSTO <= '" + mv_par04 + "' "
+	cIndex := CriaTrab(nil,.f.)
+	IndRegua(cAliasQry,cIndex,cOrdem,,cFiltro,"")
+	nIndex := RetIndex("SN3")
+	#IFNDEF TOP
+		dbSetIndex(cIndex+OrdBagExt())
+	#Endif
+	dbSetOrder(nIndex+1)
+	dbSelectArea(cAliasQry)
+	dbGoTop()
+#IFDEF TOP
+	EndIf
+#ENDIF
+
+While (cAliasQry)->(!Eof())
+    
+	IF lEnd
+		@ PROW()+1,001 PSAY OemToAnsi(STR0009) // "CANCELADO PELO OPERADOR"
+		Exit
+	EndIf
+	   
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³Verifica a parametriza‡„o antes mesmo de entrar no detalhe ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	nQuantidade := 0
+
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ Controla a quebra no 1o. nivel                                         ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	IF nOrdem == 1
+		cQuebra1 := (cAliasQry)->N3_CCONTAB
+		cCond1   := cAliasQry + "->N3_CCONTAB == cQuebra1"
+	ElseIf nOrdem == 2
+		cQuebra1 := (cAliasQry)->N3_CCUSTO
+		cCond1   := cAliasQry + "->N3_CCUSTO == cQuebra1"
+	ElseIf nOrdem == 3
+		cQuebra1 := (cAliasQry)->N3_SUBCTA
+		cCond1   := cAliasQry + "->N3_SUBCTA == cQuebra1"
+	ElseIf nOrdem == 4
+		cQuebra1 := (cAliasQry)->N3_CLVL
+		cCond1   := cAliasQry + "->N3_CLVL == cQuebra1"
+	EndIf
+	dbSelectArea(cAliasQry)
+    
+	IF Empty(cQuebra1)
+		dbSkip()
+		Loop
+	EndIf
+	
+	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+	//³ No caso de considerar baixas, Dever  somar³
+	//³ somente os valores de deprecia‡ao mensal, ³
+	//³ para que o relat¢rio fique 'batido' com o ³
+	//³ razao.                                    ³
+	//³ Desconsidera os Bens Baixados. Mas os bens³
+	//³ baixados no mes do ultimo calculo devem a-³
+	//³ parecer no relatorio.                     ³
+	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	If mv_par10 == 2   // Nao considera nenhuma baixa
+		If	Val((cAliasQry)->N3_BAIXA) != 0
+			dbSkip()
+			Loop
+		Endif
+	Elseif mv_par10 == 3	// Baixas ate o calculo
+		If !Empty((cAliasQry)->N3_DTBAIXA) .And. (cAliasQry)->N3_DTBAIXA > dUltDepr
+			dbSkip()
+			Loop
+		EndIf
+	Elseif mv_par10 == 4 	// Baixas apos o calculo
+		If !Empty((cAliasQry)->N3_DTBAIXA) .And. (cAliasQry)->N3_DTBAIXA <= dUltDepr
+			dbSkip()
+			Loop
+		EndIf
+	Endif
+    
+	lDescricao := .f.
+    
+	While (cAliasQry)->(!Eof()) .AND. &cCond1
+        
+		IF lEnd
+			@PROW()+1,001 PSAY OemToAnsi(STR0009) //"CANCELADO PELO OPERADOR"
+			Exit
+		EndIf
+		
+     	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Considera filtro do usuario                                  ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If !Empty(cFilterUser).and.!(&cFilterUser)
+			dbSelectArea(cAliasQry)
+			dbSkip()
+			Loop
+		Endif
+		
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ No caso de considerar baixas, Dever  somar³
+		//³ somente os valores de deprecia‡ao mensal, ³
+		//³ para que o relat¢rio fique 'batido' com o ³
+		//³ razao.                                    ³
+		//³ Desconsidera os Bens Baixados. Mas os bens³
+		//³baixados no mes do ultimo calculo devem a- ³
+		//³parecer no relatorio.                      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If	Val((cAliasQry)->N3_BAIXA) != 0
+			If (mv_par10 == 2 .Or. mv_par10 == 4) .and.;
+			   ((cAliasQry)->N3_DTBAIXA > dUltDepr) .and. (cAtfCont != 'O')
+
+				// MV_PAR10 - Quanto as baixas:
+				// 1 - Todas
+				// 2 - Nenhuma
+				// 3 - Ate o Calculo
+				// 4 - Apos o Calculo
+	         // 5 - Més do Calculo
+            // Elimina os bens baixados em datas anteriores ao mes do ultimo calculo
+ 				
+				// Para que os valores de depreciacao no Razao e o Posicao Valorizada 
+				// fiquem coerentes devem ser analizados:
+				// 1- Se a data da baixa do Bem foi apos o ultimo calculo da deprecicao
+				// 2- Se o paramentro MV_ATFCONT esta como "0" - Online
+				// Nestas situacoes, os saldos das contas de depreciacao exibidos no Razao ja estao atualizados,
+				// portanto o Posicao Valorizada deve refletir estes valores
+
+				For nSuf := 1 To 5
+					IF SubStr(cMoedas,nSuf,1) == "S"
+						cSuf      := Str(nSuf,1)
+						//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+						//³ Totaliza para quebra no 1o. Nivel                             ³
+						//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+						// Ajusta o totalizador da depreciacao acumulada e do exercicio quando houver
+						// baixa. Se nao fizer este ajuste, a soma da depreciacao do mes anterior mais
+						// a depreciacao do mes atual nao conferem com a depreciacao do exercicio, quando
+						// houver baixa.
+						aTquebra1[nSuf][04] += (&(cAliasQry+'->N3_VRDBAL'+cSuf)-&(cAliasQry+'->N3_VRDMES'+cSuf))
+						If &(cAliasQry+'->N3_VRDMES'+cSuf) > 0
+							aTquebra1[nSuf][05] += (&(cAliasQry+'->N3_VRDACM'+cSuf)-&(cAliasQry+'->N3_VRDMES'+cSuf))
+						Endif	
+					Endif
+				Next
+			Endif	 
+           	// Imprime totais para comparação com o Razão (ATFR130)
+            If mv_par14 == 1 
+	            If  mv_par10 == 2 .or. mv_par10 == 4
+					For nSuf := 1 To 5
+						If SubStr(cMoedas,nSuf,1) == "S"
+							cSuf      := Str(nSuf,1)
+ 							If SN1->N1_PATRIM $ "NP "
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Totaliza para quebra no 1o. Nivel                             ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								// Tem de somar as depreciações de baixas do mês
+								If Month((cAliasQry)->N3_DTBAIXA) == Month(dUltDepr) .AND. Year((cAliasQry)->N3_DTBAIXA) == Year(dUltDepr)
+									aTotBaixa[nSuf][03] += IIf (Empty(SN1->N1_DTBLOQ) .Or. Dtos(SN1->N1_DTBLOQ) < Dtos(dUltDepr),&(cAliasQry + '->N3_VRDMES'+cSuf),0)
+									IF cSuf == "1"
+										aTotBaixa[nSuf][09] += &(cAliasQry + '->N3_VRCDM'+cSuf)
+									EndIf
+								EndIf
+    	                        If mv_par10 == 4
+									If (cAliasQry)->N3_DTBAIXA > dUltDepr
+										aTotBaixa[nSuf][01] -= &(cAliasQry + '->N3_VORIG'+cSuf)
+										aTotBaixa[nSuf][02] -= (cAliasQry)->N3_VORIG1 + (cAliasQry)->N3_VRCACM1 + (cAliasQry)->N3_AMPLIA1
+										aTotBaixa[nSuf][04] -= &(cAliasQry + '->N3_VRDBAL'+cSuf)
+										aTotBaixa[nSuf][05] -= &(cAliasQry + '->N3_VRDACM'+cSuf)
+										aTotBaixa[nSuf][13] -= &(cAliasQry + '->N3_AMPLIA'+cSuf)
+										If cSuf == "1"
+											aTotBaixa[nSuf][06] -= &(cAliasQry + '->N3_VRCMES'+cSuf)
+											aTotBaixa[nSuf][07] -= &(cAliasQry + '->N3_VRCBAL'+cSuf)
+											aTotBaixa[nSuf][08] -= &(cAliasQry + '->N3_VRCACM'+cSuf)
+											aTotBaixa[nSuf][10] -= &(cAliasQry + '->N3_VRCDB'+cSuf)
+											aTotBaixa[nSuf][11] -= &(cAliasQry + '->N3_VRCDA'+cSuf)
+										EndIf
+									EndIf
+								EndIf
+								aTotBaixa[nSuf][12] += 1
+							Else
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Totaliza para quebra no 1o. Nivel                             ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								If Month((cAliasQry)->N3_DTBAIXA) == Month(dUltDepr) .AND. Year((cAliasQry)->N3_DTBAIXA) == Year(dUltDepr)
+									aTotBaixa[nSuf][03] -= IIf(Empty(SN1->N1_DTBLOQ) .Or. Dtos(SN1->N1_DTBLOQ) < Dtos(dUltDepr),&(cAliasQry + '->N3_VRDMES'+cSuf),0)
+									If cSuf == "1"
+										aTotBaixa[nSuf][09] -= &(cAliasQry + '->N3_VRCDM'+cSuf)
+									EndIf
+								EndIf
+                    	        If mv_par10 == 4
+									If (cAliasQry)->N3_DTBAIXA > dUltDepr
+										aTotBaixa[nSuf][01] += &(cAliasQry + '->N3_VORIG'+cSuf)
+										aTotBaixa[nSuf][02] += (cAliasQry)->N3_VORIG1 + (cAliasQry)->N3_VRCACM1 + (cAliasQry)->N3_AMPLIA1
+										aTotBaixa[nSuf][04] += &(cAliasQry + '->N3_VRDBAL'+cSuf)
+										aTotBaixa[nSuf][05] += &(cAliasQry + '->N3_VRDACM'+cSuf)
+										aTotBaixa[nSuf][13] += &(cAliasQry + '->N3_AMPLIA'+cSuf)
+										If cSuf == "1"
+											aTotBaixa[nSuf][06] += &(cAliasQry + '->N3_VRCMES'+cSuf)
+											aTotBaixa[nSuf][07] += &(cAliasQry + '->N3_VRCBAL'+cSuf)
+											aTotBaixa[nSuf][08] += &(cAliasQry + '->N3_VRCACM'+cSuf)
+											aTotBaixa[nSuf][10] += &(cAliasQry + '->N3_VRCDB'+cSuf)
+											aTotBaixa[nSuf][11] += &(cAliasQry + '->N3_VRCDA'+cSuf)
+										EndIf
+									EndIf
+								EndIf
+								aTotBaixa[nSuf][12] += 1
+							EndIf
+						EndIf
+                	Next				
+	            ElseIf  mv_par10 == 1 .or. mv_par10 == 3 .or. mv_par10 == 5
+					For nSuf := 1 To 5
+						If SubStr(cMoedas,nSuf,1) == "S"
+							cSuf      := Str(nSuf,1)
+							If SN1->N1_PATRIM $ "NP "
+								If mv_par10 ==1 // Considera Todas as Baixas										
+									//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+									//³ Totaliza para quebra no 1o. Nivel                             ³
+									//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+									aTotBaixa[nSuf][01] -= &(cAliasQry + '->N3_VORIG'+cSuf)
+									aTotBaixa[nSuf][02] -= (cAliasQry)->N3_VORIG1 + (cAliasQry)->N3_VRCACM1 + (cAliasQry)->N3_AMPLIA1
+									aTotBaixa[nSuf][04] -= &(cAliasQry + '->N3_VRDBAL'+cSuf)
+									aTotBaixa[nSuf][05] -= &(cAliasQry + '->N3_VRDACM'+cSuf)
+									aTotBaixa[nSuf][13] -= &(cAliasQry + '->N3_AMPLIA'+cSuf)
+									If cSuf == "1"
+										aTotBaixa[nSuf][06] -= &(cAliasQry + '->N3_VRCMES'+cSuf)
+										aTotBaixa[nSuf][07] -= &(cAliasQry + '->N3_VRCBAL'+cSuf)
+										aTotBaixa[nSuf][08] -= &(cAliasQry + '->N3_VRCACM'+cSuf)
+										aTotBaixa[nSuf][10] -= &(cAliasQry + '->N3_VRCDB'+cSuf)
+										aTotBaixa[nSuf][11] -= &(cAliasQry + '->N3_VRCDA'+cSuf)
+									EndIf
+									// Para a Depreciação do mês tem de tirar as diferentes do mes da última depreciação calculada
+									If !(Month((cAliasQry)->N3_DTBAIXA) == Month(dUltDepr) .AND. Year((cAliasQry)->N3_DTBAIXA) == Year(dUltDepr))
+										aTotBaixa[nSuf][03] -= IIf(Empty(SN1->N1_DTBLOQ) .Or. Dtos(SN1->N1_DTBLOQ) < Dtos(dUltDepr),&(cAliasQry + '->N3_VRDMES'+cSuf),0)
+										If cSuf == "1"
+											aTotBaixa[nSuf][09] -= &(cAliasQry + '->N3_VRCDM'+cSuf)
+										EndIf
+                    	             EndIf
+								ElseIf mv_par10 == 3	// Baixas ate o calculo
+									If (cAliasQry)->N3_DTBAIXA <= dUltDepr
+										//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+										//³ Totaliza para quebra no 1o. Nivel                             ³
+										//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+										aTotBaixa[nSuf][01] -= &(cAliasQry + '->N3_VORIG'+cSuf)
+										aTotBaixa[nSuf][02] -= (cAliasQry)->N3_VORIG1 + (cAliasQry)->N3_VRCACM1 + (cAliasQry)->N3_AMPLIA1
+										aTotBaixa[nSuf][04] -= &(cAliasQry + '->N3_VRDBAL'+cSuf)
+										aTotBaixa[nSuf][05] -= &(cAliasQry + '->N3_VRDACM'+cSuf)
+										aTotBaixa[nSuf][13] -= &(cAliasQry + '->N3_AMPLIA'+cSuf)
+										If cSuf == "1"
+											aTotBaixa[nSuf][06] -= &(cAliasQry + '->N3_VRCMES'+cSuf)
+											aTotBaixa[nSuf][07] -= &(cAliasQry + '->N3_VRCBAL'+cSuf)
+											aTotBaixa[nSuf][08] -= &(cAliasQry + '->N3_VRCACM'+cSuf)
+											aTotBaixa[nSuf][10] -= &(cAliasQry + '->N3_VRCDB'+cSuf)
+											aTotBaixa[nSuf][11] -= &(cAliasQry + '->N3_VRCDA'+cSuf)
+										EndIf
+										// Para a Depreciação do mês tem de tirar as diferentes do mes da última depreciação calculada
+										If !(Month((cAliasQry)->N3_DTBAIXA) == Month(dUltDepr) .AND. Year((cAliasQry)->N3_DTBAIXA) == Year(dUltDepr))
+											aTotBaixa[nSuf][03] -= IIf(Empty(SN1->N1_DTBLOQ) .Or. Dtos(SN1->N1_DTBLOQ) < Dtos(dUltDepr),&(cAliasQry + '->N3_VRDMES'+cSuf),0)
+											If cSuf == "1"
+												aTotBaixa[nSuf][09] -= &(cAliasQry + '->N3_VRCDM'+cSuf)
+											EndIf
+     	                	      EndIf
+									EndIf
+								ElseIf mv_par10 == 5 	// Mes do Calculo
+									If (Month((cAliasQry)->N3_DTBAIXA) == Month(dUltDepr) .AND. Year((cAliasQry)->N3_DTBAIXA) == Year(dUltDepr))
+										//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+										//³ Totaliza para quebra no 1o. Nivel                             ³
+										//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+										aTotBaixa[nSuf][01] -= &(cAliasQry + '->N3_VORIG'+cSuf)
+										aTotBaixa[nSuf][02] -= (cAliasQry)->N3_VORIG1 + (cAliasQry)->N3_VRCACM1 + (cAliasQry)->N3_AMPLIA1
+										aTotBaixa[nSuf][04] -= &(cAliasQry + '->N3_VRDBAL'+cSuf)
+										aTotBaixa[nSuf][05] -= &(cAliasQry + '->N3_VRDACM'+cSuf)
+										aTotBaixa[nSuf][13] -= &(cAliasQry + '->N3_AMPLIA'+cSuf)
+										If cSuf == "1"
+											aTotBaixa[nSuf][06] -= &(cAliasQry + '->N3_VRCMES'+cSuf)
+											aTotBaixa[nSuf][07] -= &(cAliasQry + '->N3_VRCBAL'+cSuf)
+											aTotBaixa[nSuf][08] -= &(cAliasQry + '->N3_VRCACM'+cSuf)
+											aTotBaixa[nSuf][10] -= &(cAliasQry + '->N3_VRCDB'+cSuf)
+											aTotBaixa[nSuf][11] -= &(cAliasQry + '->N3_VRCDA'+cSuf)
+										EndIf
+									EndIf
+								EndIf
+								aTotBaixa[nSuf][12] += 1
+							Else
+								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+								//³ Totaliza para quebra no 1o. Nivel                             ³
+								//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+								If mv_par10 == 1
+									aTotBaixa[nSuf][01] += &(cAliasQry + '->N3_VORIG'+cSuf)
+									aTotBaixa[nSuf][02] += (cAliasQry)->N3_VORIG1 + (cAliasQry)->N3_VRCACM1 + (cAliasQry)->N3_AMPLIA1
+									aTotBaixa[nSuf][04] += &(cAliasQry + '->N3_VRDBAL'+cSuf)
+									aTotBaixa[nSuf][05] += &(cAliasQry + '->N3_VRDACM'+cSuf)
+									aTotBaixa[nSuf][13] += &(cAliasQry + '->N3_AMPLIA'+cSuf)
+									If cSuf == "1"
+										aTotBaixa[nSuf][06] += &(cAliasQry + '->N3_VRCMES'+cSuf)
+										aTotBaixa[nSuf][07] += &(cAliasQry + '->N3_VRCBAL'+cSuf)
+										aTotBaixa[nSuf][08] += &(cAliasQry + '->N3_VRCACM'+cSuf)
+										aTotBaixa[nSuf][10] += &(cAliasQry + '->N3_VRCDB'+cSuf)
+										aTotBaixa[nSuf][11] += &(cAliasQry + '->N3_VRCDA'+cSuf)
+									EndIf
+									// Para a Depreciação do mês tem de tirar as diferentes do mes da última depreciação calculada
+									If !(Month((cAliasQry)->N3_DTBAIXA) == Month(dUltDepr) .AND. Year((cAliasQry)->N3_DTBAIXA) == Year(dUltDepr))
+										aTotBaixa[nSuf][03] += IIf(Empty(SN1->N1_DTBLOQ) .Or. Dtos(SN1->N1_DTBLOQ) < Dtos(dUltDepr),&(cAliasQry + '->N3_VRDMES'+cSuf),0)
+										If cSuf == "1"
+											aTotBaixa[nSuf][09] += &(cAliasQry + '->N3_VRCDM'+cSuf)
+										EndIf
+									EndIf
+								ElseIf mv_par10 == 3	// Baixas ate o calculo
+									If (cAliasQry)->N3_DTBAIXA <= dUltDepr
+										aTotBaixa[nSuf][01] += &(cAliasQry + '->N3_VORIG'+cSuf)
+										aTotBaixa[nSuf][02] += (cAliasQry)->N3_VORIG1 + (cAliasQry)->N3_VRCACM1 + (cAliasQry)->N3_AMPLIA1
+										aTotBaixa[nSuf][04] += &(cAliasQry + '->N3_VRDBAL'+cSuf)
+										aTotBaixa[nSuf][05] += &(cAliasQry + '->N3_VRDACM'+cSuf)
+										aTotBaixa[nSuf][13] += &(cAliasQry + '->N3_AMPLIA'+cSuf)
+										If cSuf == "1"
+											aTotBaixa[nSuf][06] += &(cAliasQry + '->N3_VRCMES'+cSuf)
+											aTotBaixa[nSuf][07] += &(cAliasQry + '->N3_VRCBAL'+cSuf)
+											aTotBaixa[nSuf][08] += &(cAliasQry + '->N3_VRCACM'+cSuf)
+											aTotBaixa[nSuf][10] += &(cAliasQry + '->N3_VRCDB'+cSuf)
+											aTotBaixa[nSuf][11] += &(cAliasQry + '->N3_VRCDA'+cSuf)
+										EndIf
+										// Para a Depreciação do mês tem de tirar as diferentes do mes da última depreciação calculada
+										If !(Month((cAliasQry)->N3_DTBAIXA) == Month(dUltDepr) .AND. Year((cAliasQry)->N3_DTBAIXA) == Year(dUltDepr))
+											aTotBaixa[nSuf][03] += IIf(Empty(SN1->N1_DTBLOQ) .Or. Dtos(SN1->N1_DTBLOQ) < Dtos(dUltDepr),&(cAliasQry + '->N3_VRDMES'+cSuf),0)
+											If cSuf == "1"
+												aTotBaixa[nSuf][09] += &(cAliasQry + '->N3_VRCDM'+cSuf)
+											EndIf
+										EndIf
+									EndIf
+								ElseIf mv_par10 == 5 	// Mes do Calculo
+									If (Month((cAliasQry)->N3_DTBAIXA) == Month(dUltDepr) .AND. Year((cAliasQry)->N3_DTBAIXA) == Year(dUltDepr))
+										aTotBaixa[nSuf][01] += &(cAliasQry + '->N3_VORIG'+cSuf)
+										aTotBaixa[nSuf][02] += (cAliasQry)->N3_VORIG1 + (cAliasQry)->N3_VRCACM1 + (cAliasQry)->N3_AMPLIA1
+										aTotBaixa[nSuf][04] += &(cAliasQry + '->N3_VRDBAL'+cSuf)
+										aTotBaixa[nSuf][05] += &(cAliasQry + '->N3_VRDACM'+cSuf)
+										aTotBaixa[nSuf][13] += &(cAliasQry + '->N3_AMPLIA'+cSuf)
+										If cSuf == "1"
+											aTotBaixa[nSuf][06] += &(cAliasQry + '->N3_VRCMES'+cSuf)
+											aTotBaixa[nSuf][07] += &(cAliasQry + '->N3_VRCBAL'+cSuf)
+											aTotBaixa[nSuf][08] += &(cAliasQry + '->N3_VRCACM'+cSuf)
+											aTotBaixa[nSuf][10] += &(cAliasQry + '->N3_VRCDB'+cSuf)
+											aTotBaixa[nSuf][11] += &(cAliasQry + '->N3_VRCDA'+cSuf)
+										EndIf
+									EndIf
+								EndIf
+								aTotBaixa[nSuf][12] += 1
+							EndIf
+						EndIf	
+        	         Next
+				EndIf
+			EndIf
+			If mv_par10 == 1
+				nQuantBx ++
+			EndIf
+			If mv_par10 == 2   // Nao considera nenhuma baixa
+				nQuantBx ++
+				dbSelectArea(cAliasQry)
+				dbSkip()
+				Loop
+			Elseif mv_par10 == 3	// Baixas ate o calculo
+				If (cAliasQry)->N3_DTBAIXA > dUltDepr
+					nQuantBx ++
+					dbSelectArea(cAliasQry)
+					dbSkip()
+					Loop
+				EndIf
+			Elseif mv_par10 == 4 	// Baixas apos o calculo
+				If (cAliasQry)->N3_DTBAIXA <= dUltDepr
+					nQuantBx ++
+					dbSelectArea(cAliasQry)
+					dbSkip()
+					Loop				
+				EndIf
+			ElseIf mv_par10 == 5 	// Mes do Calculo
+				If !(Month((cAliasQry)->N3_DTBAIXA) == Month(dUltDepr) .AND. Year((cAliasQry)->N3_DTBAIXA) == Year(dUltDepr))
+					nQuantBx ++
+					dbSelectArea(cAliasQry)
+					dbSkip()
+					Loop				
+				Endif
+			Endif	
+		Endif	
+  
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Verifica se precisa imprimir o cabecalho ou a descricao da   ³
+		//³ conta.                                                       ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		IF li > 58 .Or. (li + nMoedas + 1) > 58
+			If m_pag > mv_par12
+				m_pag := mv_par13
+			EndIf	
+			Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,15)
+			AFR070Cab(nOrdem,cQuebra1)
+			lDescricao := .T.
+		EndIf
+		If !lDescricao
+			AFR070Cab(nOrdem,cQuebra1)
+			lDescricao := .T.
+		EndIf
+        
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Localiza item no SN1                                             ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		SN1->(dbSeek(xFilial("SN1")+(cAliasQry)->N3_CBASE+(cAliasQry)->N3_ITEM))
+		dbSelectArea(cAliasQry)
+		nQuantidade ++
+        
+		If mv_par05 == 1  // 1=Analitico, 2=Sintetico
+			IF nOrdem == 1
+				@ li,000 PSAY (cAliasQry)->N3_CCUSTO 
+			Else
+				@ li,000 PSAY (cAliasQry)->N3_CCONTAB 
+			EndIf
+			@ li,021 PSAY (cAliasQry)->N3_CBASE + "-" + (cAliasQry)->N3_ITEM + "-" + (cAliasQry)->N3_TIPO 
+			@ li,040 PSAY SubStr(SN1->N1_DESCRI2,1,100)
+			@ li,142 PSAY SN1->N1_AQUISIC 
+			@ li,153 PSAY (cAliasQry)->N3_DTBAIXA 
+			@ li,164 PSAY SN1->N1_QUANTD	PICTURE PesqPict("SN1","N1_QUANTD",11)
+			@ li,176 PSAY SN1->N1_CHAPA 
+			If nOrdem == 3
+				@ li,nColITEM PSAY (cAliasQry)->N3_CCUSTO		/// CLASSE DE VALOR
+			Else
+				@ li,nColITEM PSAY (cAliasQry)->N3_SUBCTA		/// ITEM CONTABIL
+			EndIf
+			If nOrdem == 4
+				@ li,nColCLVL PSAY (cAliasQry)->N3_CCUSTO			/// C.CUSTO
+			Else		
+				@ li,nColCLVL PSAY (cAliasQry)->N3_CLVL			/// CLASSE DE VALOR
+			EndIf
+		EndIf
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Efetua a impressao dos valores conforme moedas selecionadas      ³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		For nSuf := 1 To 5
+			IF SubStr(cMoedas,nSuf,1) == "S"
+				cSuf      := Str(nSuf,1)
+				nVlrAtual := (cAliasQry)->N3_VORIG1 + (cAliasQry)->N3_VRCACM1 + (cAliasQry)->N3_AMPLIA1
+				If mv_par05 == 1  // 1=Analitico, 2=Sintetico
+					li++
+					@ li, 00	PSAY    GetMV("MV_SIMB"+cSuf)
+					@ li, 07    PSAY    &(cAliasQry + '->N3_AMPLIA'+cSuf) PICTURE PesqPict("SN3","N3_AMPLIA"+cSuf ,14, nSuf)
+					@ li, 21	PSAY    &(cAliasQry + '->N3_VORIG'+cSuf)  PICTURE PesqPict("SN3","N3_VORIG" +cSuf ,18, nSuf)
+					IF cSuf == "1"
+						@ li, 41 PSAY	nVlrAtual PICTURE PesqPict("SN3","N3_VORIG1" ,18,nSuf)
+					Endif
+					If Empty(SN1->N1_DTBLOQ) .Or. Dtos(SN1->N1_DTBLOQ) < Dtos(dUltDepr)
+						@li, 60 PSAY &(cAliasQry + '->N3_VRDMES'+cSuf) PICTURE PesqPict("SN3","N3_VRDMES"+cSuf,15,nSuf)
+					Else
+						@li, 60 PSAY 0 PICTURE PesqPict("SN3","N3_VRDMES"+cSuf,15, nSuf)
+					EndIf
+					@li, 76	PSAY    &(cAliasQry + '->N3_VRDBAL'+cSuf) PICTURE PesqPict("SN3","N3_VRDBAL"+cSuf,17,nSuf)
+					@li, 94	PSAY    &(cAliasQry + '->N3_VRDACM'+cSuf) PICTURE PesqPict("SN3","N3_VRDACM"+cSuf,19,nSuf)
+					If cSuf == "1"
+						@ li,114    PSAY    &(cAliasQry + '->N3_VRCMES'+cSuf) PICTURE PesqPict("SN3","N3_VRCMES"+cSuf,15,nSuf)
+						@ li,130    PSAY    &(cAliasQry + '->N3_VRCBAL'+cSuf) PICTURE PesqPict("SN3","N3_VRCBAL"+cSuf,17,nSuf)
+						@ li,148    PSAY    &(cAliasQry + '->N3_VRCACM'+cSuf) PICTURE PesqPict("SN3","N3_VRCACM"+cSuf,19,nSuf)
+						@ li,168    PSAY    &(cAliasQry + '->N3_VRCDM'+cSuf)  PICTURE PesqPict("SN3","N3_VRCDM" +cSuf,15,nSuf)
+						@ li,184    PSAY    &(cAliasQry + '->N3_VRCDB'+cSuf)  PICTURE PesqPict("SN3","N3_VRCDB" +cSuf,17,nSuf)
+						@ li,202    PSAY    &(cAliasQry + '->N3_VRCDA'+cSuf)  PICTURE PesqPict("SN3","N3_VRCDA" +cSuf,19,nSuf)
+					EndIf
+				Endif
+
+				If SN1->N1_PATRIM $ "NP "
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Totaliza para quebra no 1o. Nivel                             ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					aTquebra1[nSuf][01] += &(cAliasQry + '->N3_VORIG'+cSuf)
+					aTquebra1[nSuf][02] += nVlrAtual
+					aTquebra1[nSuf][03] += IIf (Empty(SN1->N1_DTBLOQ) .Or. Dtos(SN1->N1_DTBLOQ) < Dtos(dUltDepr),&(cAliasQry + '->N3_VRDMES'+cSuf),0)
+					aTquebra1[nSuf][04] += &(cAliasQry + '->N3_VRDBAL'+cSuf)
+					aTquebra1[nSuf][05] += &(cAliasQry + '->N3_VRDACM'+cSuf)
+					aTquebra1[nSuf][13] += &(cAliasQry + '->N3_AMPLIA'+cSuf)
+					IF cSuf == "1"
+						aTquebra1[nSuf][06] += &(cAliasQry + '->N3_VRCMES'+cSuf)
+						aTquebra1[nSuf][07] += &(cAliasQry + '->N3_VRCBAL'+cSuf)
+						aTquebra1[nSuf][08] += &(cAliasQry + '->N3_VRCACM'+cSuf)
+						aTquebra1[nSuf][09] += &(cAliasQry + '->N3_VRCDM'+cSuf)
+						aTquebra1[nSuf][10] += &(cAliasQry + '->N3_VRCDB'+cSuf)
+						aTquebra1[nSuf][11] += &(cAliasQry + '->N3_VRCDA'+cSuf)
+					EndIf
+					aTquebra1[nSuf][12] += 1
+				Else
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Totaliza para quebra no 1o. Nivel                             ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					aTquebra1[nSuf][01] -= &(cAliasQry + '->N3_VORIG'+cSuf)
+					aTquebra1[nSuf][02] -= nVlrAtual
+					aTquebra1[nSuf][03] -= IIf(Empty(SN1->N1_DTBLOQ) .Or. Dtos(SN1->N1_DTBLOQ) < Dtos(dUltDepr),&(cAliasQry + '->N3_VRDMES'+cSuf),0)
+					aTquebra1[nSuf][04] -= &(cAliasQry + '->N3_VRDBAL'+cSuf)
+					aTquebra1[nSuf][05] -= &(cAliasQry + '->N3_VRDACM'+cSuf)
+					aTquebra1[nSuf][13] -= &(cAliasQry + '->N3_AMPLIA'+cSuf)
+					IF cSuf == "1"
+						aTquebra1[nSuf][06] -= &(cAliasQry + '->N3_VRCMES'+cSuf)
+						aTquebra1[nSuf][07] -= &(cAliasQry + '->N3_VRCBAL'+cSuf)
+						aTquebra1[nSuf][08] -= &(cAliasQry + '->N3_VRCACM'+cSuf)
+						aTquebra1[nSuf][09] -= &(cAliasQry + '->N3_VRCDM'+cSuf)
+						aTquebra1[nSuf][10] -= &(cAliasQry + '->N3_VRCDB'+cSuf)
+						aTquebra1[nSuf][11] -= &(cAliasQry + '->N3_VRCDA'+cSuf)
+					EndIf
+					aTquebra1[nSuf][12] += 1
+				EndIf
+			EndIf
+		Next
+		If mv_par05 == 1  // 1=Analitico, 2=Sintetico
+			li ++
+		Endif
+		dbSelectArea(cAliasQry)
+		DbSkip()
+	EndDo
+    
+   lQuebra := .F.
+ 	If aTQuebra1[1][12] != 0
+      lQuebra := .T.
+		cDescr := Afr070desc( nOrdem, cQuebra1 )
+		@ li, 6 PSAY OemToAnsi(STR0010) + cCabCond1 + cDescr 		// "TOTAL "
+		@ li,72 PSAY OemToAnsi(STR0011) + Str(nQuantidade,7,0) 	// "QUANTIDADE"
+		nTotal += nQuantidade
+		nQuantidade := 0
+		
+		If lCtb
+			dbSelectArea("CT1")
+			dbSeek(xFilial()+cQuebra1)
+		Else
+			dbSelectArea("SI1")
+			dbSeek(xFilial()+cQuebra1)
+		Endif
+		
+		For nSuf := 1 To 5
+			IF SubStr(cMoedas,nSuf,1) == "S"
+				cSuf      := Str(nSuf,1)
+				li++
+				@ li, 00    PSAY    GetMV("MV_SIMB"+cSuf)
+				If nOrdem == 1
+					If lCtb
+						If 	SubStr(CT1->CT1_CONTA,1,1) $ cGrupoPass .And.;
+							CT1->CT1_NORMAL == "1"
+							aTQuebra1[nSuf][ 1] := aTQuebra1[nSuf][ 1] * -1
+							aTQuebra1[nSuf][ 2] := aTQuebra1[nSuf][ 2] * -1
+						Endif					
+					Else
+						If 	SubStr(SI1->I1_CODIGO,1,1) $ cGrupoPass .And.;
+							SI1->I1_NORMAL == "D"
+							aTQuebra1[nSuf][ 1] := aTQuebra1[nSuf][ 1] * -1
+							aTQuebra1[nSuf][ 2] := aTQuebra1[nSuf][ 2] * -1
+						Endif
+					EndIf
+				Endif
+				@ li, 07    PSAY    aTQuebra1[nSuf][13] PICTURE PesqPict("SN3","N3_VORIG" + cSuf ,14,nSuf)
+				@ li, 21    PSAY    aTQuebra1[nSuf][01] PICTURE PesqPict("SN3","N3_AMPLIA"+ cSuf ,18,nSuf)
+				If cSuf == "1"
+					@ li, 41    PSAY   aTQuebra1[nSuf][02] PICTURE PesqPict("SN3","N3_VORIG1" ,19,nSuf)
+				EndIf
+				@ li, 60    PSAY    aTQuebra1[nSuf][03] PICTURE PesqPict("SN3","N3_VRDMES"+cSuf,15,nSuf)
+				@ li, 76    PSAY    aTQuebra1[nSuf][04] PICTURE PesqPict("SN3","N3_VRDBAL"+cSuf,17,nSuf)
+				@ li, 94    PSAY    aTQuebra1[nSuf][05] PICTURE PesqPict("SN3","N3_VRDACM"+cSuf,19,nSuf)
+				IF cSuf == "1"
+					@ li,114    PSAY    aTQuebra1[nSuf][06] PICTURE PesqPict("SN3","N3_VRCMES"+cSuf,15,nSuf)
+					@ li,130    PSAY    aTQuebra1[nSuf][07] PICTURE PesqPict("SN3","N3_VRCBAL"+cSuf,17,nSuf)
+					@ li,148    PSAY    aTQuebra1[nSuf][08] PICTURE PesqPict("SN3","N3_VRCACM"+cSuf,19,nSuf)
+					@ li,168    PSAY    aTQuebra1[nSuf][09] PICTURE PesqPict("SN3","N3_VRCDM" +cSuf,15,nSuf)
+					@ li,184    PSAY    aTQuebra1[nSuf][10] PICTURE PesqPict("SN3","N3_VRCDB" +cSuf,17,nSuf)
+					@ li,202    PSAY    aTQuebra1[nSuf][11] PICTURE PesqPict("SN3","N3_VRCDA" +cSuf,19,nSuf)
+				Endif
+				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+				//³ Totaliza para quebra no 1o. Nivel                             ³
+				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+				aTotGeral[nSuf][01] += aTQuebra1[nSuf][01]
+				aTotGeral[nSuf][02] += aTQuebra1[nSuf][02]
+				aTotGeral[nSuf][03] += aTQuebra1[nSuf][03]
+				aTotGeral[nSuf][04] += aTQuebra1[nSuf][04]
+				aTotGeral[nSuf][05] += aTQuebra1[nSuf][05]
+				aTotGeral[nSuf][13] += aTQuebra1[nSuf][13]
+				IF cSuf == "1"
+					aTotGeral[nSuf][06] += aTQuebra1[nSuf][06]
+					aTotGeral[nSuf][07] += aTQuebra1[nSuf][07]
+					aTotGeral[nSuf][08] += aTQuebra1[nSuf][08]
+					aTotGeral[nSuf][09] += aTQuebra1[nSuf][09]
+					aTotGeral[nSuf][10] += aTQuebra1[nSuf][10]
+					aTotGeral[nSuf][11] += aTQuebra1[nSuf][11]
+				Endif
+				aTotGeral[nSuf][12] -= aTQuebra1[nSuf][12]
+			Endif
+		Next
+		lDescricao := .F.
+	EndIf
+
+   	// Imprime totais para comparação com o Razão (ATFR130)
+	If mv_par14 == 1 
+	 	If aTotBaixa[1][12] != 0
+		    lQuebra := .T.
+			li++
+			@ li, 6 PSAY "BAIXAS"
+			@ li,72 PSAY OemToAnsi(STR0011) + Str(nQuantBx,7,0) 	// "QUANTIDADE"
+			nTotBx += nQuantBx
+			nQuantBx := 0
+			If lCtb
+				dbSelectArea("CT1")
+				dbSeek(xFilial()+cQuebra1)
+			Else
+				dbSelectArea("SI1")
+				dbSeek(xFilial()+cQuebra1)
+			EndIf
+			For nSuf := 1 To 5
+				If SubStr(cMoedas,nSuf,1) == "S"
+					cSuf      := Str(nSuf,1)
+					li++
+					@ li, 00    PSAY    GetMV("MV_SIMB"+cSuf)
+					If nOrdem == 1
+						If lCtb
+							If SubStr(CT1->CT1_CONTA,1,1) $ cGrupoPass .And. CT1->CT1_NORMAL == "1"
+								aTotBaixa[nSuf][ 1] := aTotBaixa[nSuf][ 1] * -1
+								aTotBaixa[nSuf][ 2] := aTotBaixa[nSuf][ 2] * -1
+							EndIf					
+						Else
+							If SubStr(SI1->I1_CODIGO,1,1) $ cGrupoPass .And.	SI1->I1_NORMAL == "D"
+								aTotBaixa[nSuf][ 1] := aTotBaixa[nSuf][ 1] * -1
+								aTotBaixa[nSuf][ 2] := aTotBaixa[nSuf][ 2] * -1
+							EndIf
+						EndIf
+					EndIf
+					@ li, 07    PSAY    aTotBaixa[nSuf][13]     PICTURE PesqPict("SN3","N3_VORIG" + cSuf ,14,nSuf)
+					@ li, 21    PSAY    aTotBaixa[nSuf][01]     PICTURE PesqPict("SN3","N3_AMPLIA"+ cSuf ,18,nSuf)
+					If cSuf == "1"
+						@ li, 41    PSAY   aTotBaixa[nSuf][02]  PICTURE PesqPict("SN3","N3_VORIG1" ,19,nSuf)
+					EndIf
+					@ li, 60    PSAY    aTotBaixa[nSuf][03] PICTURE PesqPict("SN3","N3_VRDMES"+cSuf,15,nSuf)
+					@ li, 76    PSAY    aTotBaixa[nSuf][04] PICTURE PesqPict("SN3","N3_VRDBAL"+cSuf,17,nSuf)
+					@ li, 94    PSAY    aTotBaixa[nSuf][05] PICTURE PesqPict("SN3","N3_VRDACM"+cSuf,19,nSuf)
+					If cSuf == "1"
+						@ li,114    PSAY    aTotBaixa[nSuf][06] PICTURE PesqPict("SN3","N3_VRCMES"+cSuf,15,nSuf)
+						@ li,130    PSAY    aTotBaixa[nSuf][07] PICTURE PesqPict("SN3","N3_VRCBAL"+cSuf,17,nSuf)
+						@ li,148    PSAY    aTotBaixa[nSuf][08] PICTURE PesqPict("SN3","N3_VRCACM"+cSuf,19,nSuf)
+						@ li,168    PSAY    aTotBaixa[nSuf][09] PICTURE PesqPict("SN3","N3_VRCDM" +cSuf,15,nSuf)
+						@ li,184    PSAY    aTotBaixa[nSuf][10] PICTURE PesqPict("SN3","N3_VRCDB" +cSuf,17,nSuf)
+						@ li,202    PSAY    aTotBaixa[nSuf][11] PICTURE PesqPict("SN3","N3_VRCDA" +cSuf,19,nSuf)
+					EndIf	
+					aTotGBx[nSuf][01] += aTotBaixa[nSuf][01]
+					aTotGBx[nSuf][02] += aTotBaixa[nSuf][02]
+					aTotGBx[nSuf][03] += aTotBaixa[nSuf][03]
+					aTotGBx[nSuf][04] += aTotBaixa[nSuf][04]
+					aTotGBx[nSuf][05] += aTotBaixa[nSuf][05]
+					aTotGBx[nSuf][13] += aTotBaixa[nSuf][13]
+					If cSuf == "1"
+						aTotGBx[nSuf][06] += aTotBaixa[nSuf][06]
+						aTotGBx[nSuf][07] += aTotBaixa[nSuf][07]
+						aTotGBx[nSuf][08] += aTotBaixa[nSuf][08]
+						aTotGBx[nSuf][09] += aTotBaixa[nSuf][09]
+						aTotGBx[nSuf][10] += aTotBaixa[nSuf][10]
+						aTotGBx[nSuf][11] += aTotBaixa[nSuf][11]
+					EndIf
+					aTotGBx[nSuf][12] -= -aTotBaixa[nSuf][12]
+				EndIf
+			Next
+		EndIf
+	 	If aTotBaixa[1][12] != 0
+		    lQuebra := .T.
+			li++
+			@ li, 6 PSAY "TOTAL"
+			If lCtb
+				dbSelectArea("CT1")
+				dbSeek(xFilial()+cQuebra1)
+			Else
+				dbSelectArea("SI1")
+				dbSeek(xFilial()+cQuebra1)
+			EndIf
+			For nSuf := 1 To 5
+				If SubStr(cMoedas,nSuf,1) == "S"
+					cSuf      := Str(nSuf,1)
+					li++
+					@ li, 00    PSAY    GetMV("MV_SIMB"+cSuf)
+					@ li, 07    PSAY    aTQuebra1[nSuf][13]+aTotBaixa[nSuf][13] PICTURE PesqPict("SN3","N3_VORIG" + cSuf ,14,nSuf)
+					@ li, 21    PSAY    aTQuebra1[nSuf][01]+aTotBaixa[nSuf][01] PICTURE PesqPict("SN3","N3_AMPLIA"+ cSuf ,18,nSuf)
+					If cSuf == "1"
+						@ li, 41    PSAY   aTQuebra1[nSuf][02]+aTotBaixa[nSuf][02] PICTURE PesqPict("SN3","N3_VORIG1" ,19,nSuf)
+					EndIf
+					@ li, 60    PSAY    aTQuebra1[nSuf][03]+aTotBaixa[nSuf][03] PICTURE PesqPict("SN3","N3_VRDMES"+cSuf,15,nSuf)
+					@ li, 76    PSAY    aTQuebra1[nSuf][04]+aTotBaixa[nSuf][04] PICTURE PesqPict("SN3","N3_VRDBAL"+cSuf,17,nSuf)
+					@ li, 94    PSAY    aTQuebra1[nSuf][05]+aTotBaixa[nSuf][05] PICTURE PesqPict("SN3","N3_VRDACM"+cSuf,19,nSuf)
+					If cSuf == "1"
+						@ li,114    PSAY    aTQuebra1[nSuf][06]+aTotBaixa[nSuf][06] PICTURE PesqPict("SN3","N3_VRCMES"+cSuf,15,nSuf)
+						@ li,130    PSAY    aTQuebra1[nSuf][07]+aTotBaixa[nSuf][07] PICTURE PesqPict("SN3","N3_VRCBAL"+cSuf,17,nSuf)
+						@ li,148    PSAY    aTQuebra1[nSuf][08]+aTotBaixa[nSuf][08] PICTURE PesqPict("SN3","N3_VRCACM"+cSuf,19,nSuf)
+						@ li,168    PSAY    aTQuebra1[nSuf][09]+aTotBaixa[nSuf][09] PICTURE PesqPict("SN3","N3_VRCDM" +cSuf,15,nSuf)
+						@ li,184    PSAY    aTQuebra1[nSuf][10]+aTotBaixa[nSuf][10] PICTURE PesqPict("SN3","N3_VRCDB" +cSuf,17,nSuf)
+						@ li,202    PSAY    aTQuebra1[nSuf][11]+aTotBaixa[nSuf][11] PICTURE PesqPict("SN3","N3_VRCDA" +cSuf,19,nSuf)
+					EndIf
+				EndIf 
+			Next		
+			lDescricao := .F.
+		EndIf
+    EndIf
+
+    If lQuebra
+		For nSuf := 1 To 13
+			aTQuebra1[1][nSuf] := 0
+			aTQuebra1[2][nSuf] := 0
+			aTQuebra1[3][nSuf] := 0
+			aTQuebra1[4][nSuf] := 0
+			aTQuebra1[5][nSuf] := 0
+		   	// Imprime totais para comparação com o Razão (ATFR130)
+			If mv_par14 == 1 
+				aTotBaixa[1][nSuf] := 0
+				aTotBaixa[2][nSuf] := 0
+				aTotBaixa[3][nSuf] := 0
+				aTotBaixa[4][nSuf] := 0
+				aTotBaixa[5][nSuf] := 0
+			EndIf
+		Next
+		li+=2
+		@ li, 0 PSAY Replicate("-",limite)
+		li++
+    EndIf
+	dbSelectArea(cAliasQry)
+EndDO
+
+If li > 58 .Or. (li + nMoedas + 1) > 58
+	If m_pag > mv_par12
+		m_pag := mv_par13
+	EndIf	
+	Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,15)
+	AFR070Cab(nOrdem,cQuebra1)
+	lDescricao := .T.
+EndIf
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Efetua a impressao da totalizacao na quebra do segundo nivel        ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+li++
+@ li,06 PSAY OemToAnsi(STR0012) 							// "* * *   T O T A L   G E R A L   * * *"
+@ li,72 PSAY OemToAnsi(STR0013) + Str(nTotal,7,0) 	// "QUANTIDADE" 
+li++
+For nSuf := 1 To 5
+	IF SubStr(cMoedas,nSuf,1) == "S"
+		cSuf      := Str(nSuf,1)
+		li++
+		IF li > 58 .Or. (li + nMoedas + 1) > 58
+			If m_pag > mv_par12
+				m_pag := mv_par13
+			EndIf	
+			Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,15)
+		Endif
+		@ li, 00    PSAY    GetMV("MV_SIMB"+cSuf)
+		@ li, 07    PSAY    aTotGeral[nSuf][13]     PICTURE PesqPict("SN3","N3_AMPLIA"+ cSuf,14,nSuf)
+		@ li, 21    PSAY    aTotGeral[nSuf][01]     PICTURE PesqPict("SN3","N3_VORIG" + cSuf,18,nSuf)
+		IF cSuf == "1"
+			@ li, 41    PSAY    aTotGeral[nSuf][02]  PICTURE PesqPict("SN3","N3_VORIG1" ,19,nSuf)
+		End
+		@li, 60    PSAY    aTotGeral[nSuf][03] PICTURE PesqPict("SN3","N3_VRDMES"+cSuf,15,nSuf)
+		@li, 76    PSAY    aTotGeral[nSuf][04] PICTURE PesqPict("SN3","N3_VRDBAL"+cSuf,17,nSuf)
+		@li, 94    PSAY    aTotGeral[nSuf][05] PICTURE PesqPict("SN3","N3_VRDACM"+cSuf,19,nSuf)
+		If cSuf == "1"
+			@li,114    PSAY    aTotGeral[nSuf][06] PICTURE PesqPict("SN3","N3_VRCMES"+cSuf,15,nSuf)
+			@li,130    PSAY    aTotGeral[nSuf][07] PICTURE PesqPict("SN3","N3_VRCBAL"+cSuf,17,nSuf)
+			@li,148    PSAY    aTotGeral[nSuf][08] PICTURE PesqPict("SN3","N3_VRCACM"+cSuf,19,nSuf)
+			@li,168    PSAY    aTotGeral[nSuf][09] PICTURE PesqPict("SN3","N3_VRCDM" +cSuf,15,nSuf)
+			@li,184    PSAY    aTotGeral[nSuf][10] PICTURE PesqPict("SN3","N3_VRCDB" +cSuf,17,nSuf)
+			@li,202    PSAY    aTotGeral[nSuf][11] PICTURE PesqPict("SN3","N3_VRCDA" +cSuf,19,nSuf)
+		EndIf
+	EndIf
+Next
+// Imprime totais para comparação com o Razão (ATFR130)
+If mv_par14 == 1 
+	li += 2
+	@ li,06 PSAY "* * *  B A I X A S  * * *"
+	@ li,72 PSAY OemToAnsi(STR0013) + Str(nTotBx,7,0) 	// "QUANTIDADE" 
+	li++
+	For nSuf := 1 To 5
+		If SubStr(cMoedas,nSuf,1) == "S"
+			cSuf      := Str(nSuf,1)
+			li++
+			If li > 58 .Or. (li + nMoedas + 1) > 58
+				If m_pag > mv_par12
+					m_pag := mv_par13
+				EndIf	
+				Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,15)
+			EndIf
+			@ li, 00    PSAY    GetMV("MV_SIMB"+cSuf)
+			@ li, 07    PSAY    aTotGBx[nSuf][13] PICTURE PesqPict("SN3","N3_AMPLIA"+ cSuf,14,nSuf)
+			@ li, 21    PSAY    aTotGBx[nSuf][01] PICTURE PesqPict("SN3","N3_VORIG" + cSuf,18,nSuf)
+			If cSuf == "1"
+				@ li, 41    PSAY    aTotGBx[nSuf][02] PICTURE PesqPict("SN3","N3_VORIG1" ,19,nSuf)
+			EndIf
+			@li, 60    PSAY    aTotGBx[nSuf][03] PICTURE PesqPict("SN3","N3_VRDMES"+cSuf,15,nSuf)
+			@li, 76    PSAY    aTotGBx[nSuf][04] PICTURE PesqPict("SN3","N3_VRDBAL"+cSuf,17,nSuf)
+			@li, 94    PSAY    aTotGBx[nSuf][05] PICTURE PesqPict("SN3","N3_VRDACM"+cSuf,19,nSuf)
+			If cSuf == "1"
+				@li,114    PSAY    aTotGBx[nSuf][06] PICTURE PesqPict("SN3","N3_VRCMES"+cSuf,15,nSuf)
+				@li,130    PSAY    aTotGBx[nSuf][07] PICTURE PesqPict("SN3","N3_VRCBAL"+cSuf,17,nSuf)
+				@li,148    PSAY    aTotGBx[nSuf][08] PICTURE PesqPict("SN3","N3_VRCACM"+cSuf,19,nSuf)
+				@li,168    PSAY    aTotGBx[nSuf][09] PICTURE PesqPict("SN3","N3_VRCDM" +cSuf,15,nSuf)
+				@li,184    PSAY    aTotGBx[nSuf][10] PICTURE PesqPict("SN3","N3_VRCDB" +cSuf,17,nSuf)
+				@li,202    PSAY    aTotGBx[nSuf][11] PICTURE PesqPict("SN3","N3_VRCDA" +cSuf,19,nSuf)
+			EndIf
+		EndIf
+	Next
+	li += 2
+	@ li,06 PSAY STR0032 //"* * *   T O T A L   * * *"
+	li++
+	For nSuf := 1 To 5
+		If SubStr(cMoedas,nSuf,1) == "S"
+			cSuf      := Str(nSuf,1)
+			li++
+			If li > 58 .Or. (li + nMoedas + 1) > 58
+				If m_pag > mv_par12
+					m_pag := mv_par13
+				EndIf	
+				Cabec(Titulo,Cabec1,Cabec2,NomeProg,Tamanho,15)
+			EndIf
+			@ li, 00    PSAY    GetMV("MV_SIMB"+cSuf)
+			@ li, 07    PSAY    aTotGeral[nSuf][13]+aTotGBx[nSuf][13] PICTURE PesqPict("SN3","N3_AMPLIA"+ cSuf,14,nSuf)
+			@ li, 21    PSAY    aTotGeral[nSuf][01]+aTotGBx[nSuf][01] PICTURE PesqPict("SN3","N3_VORIG" + cSuf,18,nSuf)
+			If cSuf == "1"
+				@ li, 41    PSAY    aTotGeral[nSuf][02]+aTotGBx[nSuf][02] PICTURE PesqPict("SN3","N3_VORIG1" ,19,nSuf)
+			End
+			@li, 60    PSAY    aTotGeral[nSuf][03]+aTotGBx[nSuf][03] PICTURE PesqPict("SN3","N3_VRDMES"+cSuf,15,nSuf)
+			@li, 76    PSAY    aTotGeral[nSuf][04]+aTotGBx[nSuf][04] PICTURE PesqPict("SN3","N3_VRDBAL"+cSuf,17,nSuf)
+			@li, 94    PSAY    aTotGeral[nSuf][05]+aTotGBx[nSuf][05] PICTURE PesqPict("SN3","N3_VRDACM"+cSuf,19,nSuf)
+			If cSuf == "1"
+				@li,114    PSAY    aTotGeral[nSuf][06]+aTotGBx[nSuf][06] PICTURE PesqPict("SN3","N3_VRCMES"+cSuf,15,nSuf)
+				@li,130    PSAY    aTotGeral[nSuf][07]+aTotGBx[nSuf][07] PICTURE PesqPict("SN3","N3_VRCBAL"+cSuf,17,nSuf)
+				@li,148    PSAY    aTotGeral[nSuf][08]+aTotGBx[nSuf][08] PICTURE PesqPict("SN3","N3_VRCACM"+cSuf,19,nSuf)
+				@li,168    PSAY    aTotGeral[nSuf][09]+aTotGBx[nSuf][09] PICTURE PesqPict("SN3","N3_VRCDM" +cSuf,15,nSuf)
+				@li,184    PSAY    aTotGeral[nSuf][10]+aTotGBx[nSuf][10] PICTURE PesqPict("SN3","N3_VRCDB" +cSuf,17,nSuf)
+				@li,202    PSAY    aTotGeral[nSuf][11]+aTotGBx[nSuf][11] PICTURE PesqPict("SN3","N3_VRCDA" +cSuf,19,nSuf)
+			EndIf
+		EndIf 
+	Next
+EndIf
+If li != 80
+	Roda(cbcont,cbtxt,"G")
+End
+
+If aReturn[5] = 1
+	Set Printer To
+	dbCommitAll()
+	OurSpool(wnrel)
+EndIf
+
+MS_FLUSH()
+
+#IFDEF TOP
+	If TcSrvType() == "AS/400"
+		dbSelectArea(cAliasQry)
+		dbClearFil()
+		FErase(cIndex+OrdBagExt())
+	ENDIF	
+#ELSE
+	dbSelectArea(cAliasQry)
+	dbClearFil()
+	FErase(cIndex+OrdBagExt())
+#ENDIF
+
+Return
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ AFR070Cab  ³ Autor ³ Cesar C S Prado       ³ Data ³ 09.08.94 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Impressao do cabecalho do relatorio (Nivel 1 de quebra)      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ AFR070Cab(cPar01,nPar01,@nPar02)                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametro ³ cPar01 - Cabecalho a ser impresso                            ³±±
+±±³          ³ nPar01 - Ordem da impressao do relatorio (1-Conta/2-C.Custo) ³±±
+±±³          ³ nPar02 - Linha corrente                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ ATFR070                                                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function AFR070R4Cab(nOrdem,cChave, oReport)
+Local oSection1 := oReport:Section(1)
+Local cCabNiv1 := ""
+Local lCtb     := CtbInUse()
+
+IF nOrdem == 1
+	oSection1:Cell("CT1_CONTA"):Enable()	
+	oSection1:Cell("CT1_DESC01"):Enable()	
+	oSection1:Cell("CT1_CONTA"):SetBlock( { || Mascara(cQuebra1) } )
+	If lCtb
+		dbSelectArea("CT1")
+		dbSetOrder(1)
+		CT1->(dbSeek(xFilial("CT1") + cChave))
+		oSection1:Cell("CT1_DESC01"):SetBlock( { || CT1->CT1_DESC01 } )
+	Else
+		dbSelectArea("SI1")
+		dbSetOrder(1)
+		SI1->(dbSeek( xFilial("SI1") + cChave ))
+		oSection1:Cell("CT1_DESC01"):SetBlock( { || SI1->I1_DESC } )
+	Endif
+ElseIf nOrdem == 2
+	oSection1:Cell("CTT_CUSTO"):Enable()	
+	oSection1:Cell("CTT_DESC01"):Enable()	
+	oSection1:Cell("CTT_CUSTO"):SetBlock( {|| cQuebra1 })
+	If lCtb
+		dbSelectAre("CTT")
+		dbSetOrder(1)
+		CTT->( dbSeek(xFilial("CTT")+cChave ) )
+		oSection1:Cell("CTT_DESC01"):SetBlock( {|| CTT->CTT_DESC01 })
+	Else
+		SI3 -> ( dbSeek( xFilial("SI3") + cChave ) )
+		oSection1:Cell("CTT_DESC01"):SetBlock( {|| SI3->I3_DESC })
+	Endif
+ElseIf nOrdem == 3
+	oSection1:Cell("CTD_ITEM"):Enable()	
+	oSection1:Cell("CTD_DESC01"):Enable()	
+	oSection1:Cell("CTD_ITEM"):SetBlock( {|| cQuebra1 })
+	If lCtb
+		dbSelectAre("CTD")
+		dbSetOrder(1)
+		CTD->( dbSeek(xFilial("CTD")+cChave ) )
+		oSection1:Cell("CTD_ITEM"):SetBlock( {|| CTD->CTD_DESC01 })
+	Else
+		oSection1:Cell("CTD_ITEM"):SetBlock( {|| "" })
+	Endif
+ElseIf nOrdem == 4
+	oSection1:Cell("CTH_CLVL"):Enable()	
+	oSection1:Cell("CTH_DESC01"):Enable()	
+	oSection1:Cell("CTH_CLVL"):SetBlock( {|| cQuebra1 })
+	If lCtb
+		dbSelectAre("CTH")
+		dbSetOrder(1)
+		CTH->( dbSeek(xFilial("CTH")+cChave ) )
+		oSection1:Cell("CTD_ITEM"):SetBlock( {|| CTH->CTH_DESC01 })
+	Else
+		oSection1:Cell("CTD_CLVL"):SetBlock( {|| CTD->CTD_DESC01 })
+	Endif
+EndIf
+oSection1:Init()
+oSection1:PrintLine()
+oSection1:Finish()
+Return NIL
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ AFR070Cab  ³ Autor ³ Cesar C S Prado       ³ Data ³ 09.08.94 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Impressao do cabecalho do relatorio (Nivel 1 de quebra)      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ AFR070Cab(cPar01,nPar01,@nPar02)                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametro ³ cPar01 - Cabecalho a ser impresso                            ³±±
+±±³          ³ nPar01 - Ordem da impressao do relatorio (1-Conta/2-C.Custo) ³±±
+±±³          ³ nPar02 - Linha corrente                                      ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ ATFR070                                                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function AFR070Cab(nOrdem,cChave)
+Local cCabNiv1 := ""
+Local lCtb     := CtbInUse()
+                                        
+IF nOrdem == 1
+	If lCtb
+		dbSelectArea("CT1")
+		dbSetOrder(1)
+		CT1->(dbSeek(xFilial("CT1") + cChave))
+		cCabNiv1 := Mascara(cQuebra1)+" - "+CT1->CT1_DESC01
+	Else
+		dbSelectArea("SI1")
+		dbSetOrder(1)
+		SI1->(dbSeek( xFilial("SI1") + cChave ))
+		cCabNiv1 := Mascara(cQuebra1)+" - "+SI1->I1_DESC
+	Endif
+ElseIf nOrdem == 2
+	If lCtb
+		dbSelectAre("CTT")
+		dbSetOrder(1)
+		CTT->( dbSeek(xFilial("CTT")+cChave ) )
+		cCabNiv1 := cQuebra1+" - "+CTT->CTT_DESC01
+	Else
+		SI3 -> ( dbSeek( xFilial("SI3") + cChave ) )
+		cCabNiv1 := cQuebra1+" - "+SI3->I3_DESC
+	Endif
+ElseIf nOrdem == 3
+	If lCtb
+		dbSelectAre("CTD")
+		dbSetOrder(1)
+		CTD->( dbSeek(xFilial("CTD")+cChave ) )
+		cCabNiv1 := cQuebra1+" - "+CTD->CTD_DESC01
+	Else
+		cCabNiv1 := cQuebra1+" - "
+	Endif
+ElseIf nOrdem == 4
+	If lCtb
+		dbSelectAre("CTH")
+		dbSetOrder(1)
+		CTH->( dbSeek(xFilial("CTH")+cChave ) )
+		cCabNiv1 := cQuebra1+" - "+CTH->CTH_DESC01
+	Else
+		cCabNiv1 := cQuebra1+" - "
+	Endif
+EndIf
+@ Li, 0 PSAY    cCabNiv1 
+Li += 2
+Return NIL
+
+/*
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ AFR070Desc ³ Autor ³ Cesar C S Prado       ³ Data ³ 09.08.94 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡„o ³ Busca a descricao a ser impressa para subtotal / total       ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Sintaxe e ³ AFR070Desc(nPar01)                                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametro ³ nPar01 - Ordem da impressao do relatorio (1-Conta/2-C.Custo) ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ ATFR070                                                      ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function AFR070Desc(nOrdem, cChave )
+Local cAlias  := Alias()
+Local cDescr  := ""
+Local lCtb    := CtbInUse()                                   
+                            
+If lCtb
+	If nOrdem == 1
+		dbSelectArea("CT1")
+		IF MsSeek(cFilial+cChave)
+			cDescr := Mascara(cChave) + " " + CT1->CT1_DESC01
+		Endif
+	ElseIf nOrdem == 2
+		dbSelectArea("CTT")
+		IF MsSeek(cFilial+cChave)
+			cDescr := cChave + " " + CTT->CTT_DESC01
+		EndIf
+	ElseIf  nOrdem == 3
+		dbSelectArea("CTD")
+		IF MsSeek(cFilial+cChave)
+			cDescr := cChave + " " + CTD->CTD_DESC01
+		EndIf
+	ElseIf nOrdem == 4
+		dbSelectArea("CTH")
+		IF MsSeek(cFilial+cChave)
+			cDescr := cChave + " " + CTH->CTH_DESC01
+		EndIf
+	EndIf
+Else
+	dbSelectArea( Iif( nOrdem == 1, "SI1", "SI3" ) )
+	IF dbSeek(cFilial+cChave)
+		cDescr := Iif( nOrdem==1,Mascara(cChave),cChave) + " " + Iif(nOrdem==1,SI1->I1_DESC,SI3->I3_DESC)
+	Endif
+EndIf
+
+dbSelectArea( cAlias )
+Return (cDescr)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡…o    ³ AjustaSX1    ³Autor ³  Alice Y Yamamoto    ³Data³ 25.04.01 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡…o ³ Ajusta perguntas do SX1                                    ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+Static Function AjustaSx1()
+
+Local aArea	:= { Alias(), IndexOrd() } 
+Local aPerg	:={}
+Local aRegs	:={}
+Local cPerg	:= "AFR070"
+Local nX
+Local cOrdem
+
+Aadd(aPerg,{"Quanto as Baixas ?","¨Quanto Cancelar ?" ,"About Cancel ?" })
+
+dbSelectArea("SX1")
+If dbSeek(cPerg+"10") .And. (!("Quanto as Baixas" $ X1_PERGUNT) .OR. !("Mes Calc." $ X1_DEF05))
+	RecLock("SX1",.F.)
+	Replace X1_PERGUNT 	With aPerg[1][1]
+	Replace X1_PERSPA 	With aPerg[1][2]
+	Replace X1_PERENG 	With aPerg[1][3]
+	Replace X1_DEF01     	With "Todas"
+	Replace X1_DEF02		With "Nenhuma"
+	Replace X1_DEF03		With "Ate Calc."
+	Replace X1_DEF04		With "Apos Calc."
+	Replace X1_DEF05		With "Mes Calc."
+
+	Replace X1_DEFSPA1   With "Todas"
+	Replace X1_DEFSPA2   With "Ninguma"
+	Replace X1_DEFSPA3   With "A Calc."
+	Replace X1_DEFSPA4   With "Apos Calc."
+	Replace X1_DEFSPA5   With "Mes Calc."
+
+	Replace X1_DEFENG1   With "All"
+	Replace X1_DEFENG2   With "Any"
+	Replace X1_DEFENG3   With "In Calc."
+	Replace X1_DEFENG4   With "After Calc."
+	Replace X1_DEFENG5   With "Mes Calc."
+
+	MsUnLock()
+EndIf
+
+//AAdd(aRegs,{"Imprime Total Baixas ?","¿Imprime Total Canc.?","Print Cancel Total ?","mv_che","N",2,0,0,"C","","mv_par14","Sim","Si","Yes","","","Nao","No","No","",""})
+
+cOrdem := "14"
+If !MsSeek(cPerg+cOrdem)
+	For nx:=1 To Len(aRegs)
+		RecLock("SX1",.T.)
+		Replace X1_GRUPO			With cPerg
+		Replace X1_ORDEM			With cOrdem 
+		Replace X1_PERGUNTE		With aRegs[nx][01]
+		Replace X1_PERSPA			With aRegs[nx][02]
+		Replace X1_PERENG			With aRegs[nx][03]
+		Replace X1_VARIAVL			With aRegs[nx][04]
+		Replace X1_TIPO				With aRegs[nx][05]
+		Replace X1_TAMANHO 		With aRegs[nx][06]
+		Replace X1_DECIMAL 		With aRegs[nx][07]
+		Replace X1_PRESEL			With aRegs[nx][08]
+		Replace X1_GSC				With aRegs[nx][09]
+		Replace X1_VALID				With aRegs[nx][10]
+		Replace X1_VAR01			With aRegs[nx][11]
+		Replace X1_DEF01			With aRegs[nx][12]
+		Replace X1_DEFSPA1 		With aRegs[nx][13]
+		Replace X1_DEFENG1 		With aRegs[nx][14]
+		Replace X1_CNT01				With aRegs[nx][15]
+		Replace X1_VAR02 			With aRegs[nx][16]
+		Replace X1_DEF02 			With aRegs[nx][17]
+		Replace X1_DEFSPA2 		With aRegs[nx][18]
+		Replace X1_DEFENG2 		With aRegs[nx][19]
+		Replace X1_F3 					With aRegs[nx][20]
+		Replace X1_GRPSXG			With aRegs[nx][21]
+		MsUnlock()
+	Next
+Endif
+
+dbSelectArea( aArea[1] )
+dbSetOrder( aArea[2] )
+Return  

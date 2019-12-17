@@ -1,0 +1,257 @@
+#include "protheus.ch"
+#include "topconn.ch"
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ MSD2460  บAutor  ณPedro  (Microsiga)  บ Data ณ 05/02/2004  บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Fun็ใo para calcular e gravar a comissใo no SD2 com base noบฑฑ
+ฑฑบ          ณ percentual gravado no C6_COMIS.                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ Ponto de Entrada na grava็ใo dos itens da Nota Fiscal de   บฑฑ
+ฑฑบ          ณ Venda.                                                     บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+
+User Function MSD2460()
+Local _AreaAtu	:= GetArea()
+Local _AreaSD2	:= SD2->(GetArea())
+Local _AreaSC6	:= SC6->(GetArea())
+Local _nComisV1 := 0
+Local _nComisV2 := 0
+Local _nComisV3 := 0
+Local _nBaseCom := 0
+
+DbSelectArea("SC6")
+DbSetOrder(1)
+DbSeek(xFilial("SC6")+SD2->D2_PEDIDO+SD2->D2_ITEMPV)
+If Found()
+	_nComisV1 := SC6->C6_STCOMV1
+	_nComisV2 := SC6->C6_STCOMV2
+	_nComisV3 := SC6->C6_STCOMV3
+EndIf
+
+If (_nComisV1+_nComisV2+_nComisV3)>0
+	
+	_nBaseCom := _BuscaBase()
+	//_nBaseCom := SD2->D2_TOTAL
+	
+	RecLock("SD2",.f.)
+	SD2->D2_STBCOM := _nBaseCom
+	If _nComisV1 > 0
+		SD2->D2_STPCOM1 := _nComisV1
+		SD2->D2_STVCOM1 := Round(_nBaseCom*(_nComisV1/100),2)
+	EndIf
+	If _nComisV2 > 0
+		SD2->D2_STPCOM2 := _nComisV2
+		SD2->D2_STVCOM2 := Round(_nBaseCom*(_nComisV2/100),2)
+	EndIf
+	If _nComisV3 > 0
+		SD2->D2_STPCOM3 := _nComisV3
+		SD2->D2_STVCOM3 := Round(_nBaseCom*(_nComisV3/100),2)
+	EndIf
+	MsUnLock()
+	
+EndIf
+
+RestArea(_AreaSC6)
+RestArea(_AreaSD2)
+RestArea(_AreaAtu)
+Return
+
+
+*******************************************************************
+*** /* Fun็ใo para calcular a Base a se utilizada no calculo */ ***
+*** /* da comissใo do vendedores.                            */ ***
+*******************************************************************
+Static Function _BuscaBase()
+
+Local _nVlBase := 0
+Local _cSA1Mod := _cSA2Mod := _cSA3Mod := _cSB1Mod := _cSC5Mod := _cSE4Mod := _cSD2Mod := " "
+Local _nIcms:=_nVlfret:=_nVlJur:=0
+
+DbSelectArea("SX2")
+DbSeek("SA1")
+_cSA1Mod := SX2->X2_MODO
+DbSeek("SA2")
+_cSA2Mod := SX2->X2_MODO
+DbSeek("SB1")
+_cSB1Mod := SX2->X2_MODO
+
+DbSelectArea("SC5")
+DbSetOrder(1)
+DbSeek(xFilial("SC5")+SD2->D2_PEDIDO)
+
+DbSelectArea("SD2")
+If SubStr(SD2->D2_CF,2,3)=="922"	//verifica se ้ Venda Futura e trata o ICMS
+	
+	If SD1->D1_TIPO $"DB"
+		DbSelectArea("SA2")
+		DbSeek(IIF(_cSA1Mod=="C",xFilial("SA2"),SD2->D2_FILIAL)+SD2->D2_CLIENTE+SD2->D2_LOJA)
+	Else
+		DbSelectArea("SA1")
+		DbSeek(IIF(_cSA1Mod=="C",xFilial("SA1"),SD2->D2_FILIAL)+SD2->D2_CLIENTE+SD2->D2_LOJA)
+	EndIf
+	DbSelectArea("SB1")
+	DbSeek(IIF(_cSB1Mod=="C",xFilial("SB1"),SD2->D2_FILIAL)+SD2->D2_COD)
+	
+        _nICMS  := U_CalcICMS(SD2->D2_TOTAL,SD2->D2_VALICM,SD2->D2_FILIAL,SD2->D2_CF,SA1->A1_EST,SB1->B1_GRUPO,SD2->D2_COD)
+Else
+	_nICMS 	:= SD2->D2_VALICM
+EndIf
+
+// Alteracao: Francys W. Soares - Data: 09/09/10
+If SC5->C5_STFRETE > 0
+	_nVlFret := SD2->D2_TOTAL * (SC5->C5_STFRETE/100)
+Else
+	_nVlFret := 0
+EndIf
+If SC5->C5_STJUROS > 0
+	_nVlJur := SD2->D2_TOTAL * (SC5->C5_STJUROS/100)
+Else
+	_nVlJur := 0
+EndIf
+_nVlBase := SD2->D2_TOTAL - (_nICMS + _nVlFret + _nVlJur)
+// Gravacao de campos personalizados.
+RecLock("SD2",.f.)
+SD2->D2_STFRETE := _nVlFret
+SD2->D2_STJUROS := _nVlJur
+MsUnLock()
+
+// Comentado: Francys W. Soares - Data: 09/09/10
+// Apos contado do Donizete com a Solange ficou definido
+// que a gravacao do frete no campo D2_VALFRE estava incorreto, pois
+// este valor nao e cobrado do cliente.
+//******************************************************************
+// Efetuado altera็ใo na forma de tratamento do Frete para dar prioridade ao campo padrใo do sistema.
+// Caso o PV tenha frete Stoller e frete padrใo, serแ dado prioridade ao campo padrใo e a comissใo
+// deverแ ser ajustado manualmente.
+// Donizete 30/09/09.
+//If SD2->D2_VALFRE==0
+//	RecLock("SD2",.f.)
+//	SD2->D2_VALFRE := _nVlFret
+//	MsUnLock()
+//EndIf
+
+Return(_nVlBase)        
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัอออออออออออออหอออออออัออออออออออออออออออออหออออออัออออออออออปฑฑ
+ฑฑบFuno    ณCalcICMS     บ Autor ณPedro (Microsiga)   บ Data ณ 01/08/03 บฑฑ
+ฑฑฬออออออออออุอออออออออออออสอออออออฯออออออออออออออออออออสออออออฯออออออออออนฑฑ
+ฑฑบDescrio ณ Calcula o ICMS no momento da impressao e grava no arquivo  บฑฑ
+ฑฑบ          ณ de trabalho.                                               บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP7                                                        บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+//Funcao acrescentada para atender solcita็ใo da Stoller negociada com Microsiga.
+/*/
+/*
+Static Function CalcICMS(_nStTot,_nStICMS,x_Filial,x_CF,x_Est,x_Grupo)
+
+Local _nIcmsNew := _nStICMS
+
+IF x_Filial == "01" .and. SubStr(x_CF,2,3) $"201-202-203-204-208-209-922"
+	Do Case
+		Case x_Est == "SP"
+			_nIcmsNew := 0
+			
+		Case x_Est $"SC-RS-PR-MG-RJ" .and.  x_Grupo  = "0001"
+			_nIcmsNew := (_nStTot *.4)*.12
+			
+		Case x_Est $"SC-RS-PR-MG-RJ" .and.  x_Grupo  <> "0001"
+			_nIcmsNew := (_nStTot *.7)*.12
+			
+		Case x_Est $"ES-MS-BA-MT-TO-GO-DF-PE-RN-PA-CE-SE-RO-MA-PB" .and. x_Grupo == "0001"
+			_nIcmsNew := (_nStTot *.4)*.07
+			
+		Case x_Est $"ES-MS-BA-MT-TO-GO-DF-PE-RN-PA-CE-SE-RO-MA-PB" .and. x_Grupo <> "0001"
+			_nIcmsNew := (_nStTot *.7)*.07
+			
+		Case x_Est == "EX"
+			_nIcmsNew := 0
+			
+		OtherWise
+			_nIcmsNew := _nStICMS
+	EndCase
+EndIf
+
+IF x_Filial == "02" .and. SubStr(x_CF,2,3) $"201-202-203-204-208-209-922"
+	Do Case
+		Case x_Est = "SP"
+			_nIcmsNew := 0
+			
+		Case x_Est = "MG" .and. x_Grupo == "0001"
+			_nIcmsNew := (_nStTot *.4)*.12
+			
+		Case x_Est = "MG" .and. x_Grupo <> "0001"
+			_nIcmsNew := (_nStTot *.7)*.12
+			
+		Case x_Est == "EX"
+			_nIcmsNew := 0
+			
+		OtherWise
+			_nIcmsNew := _nStICMS
+	EndCase
+EndIf
+
+IF x_Filial == "03" .and. SubStr(x_CF,2,3) $"201-202-203-204-208-209-922"
+	Do Case
+		Case x_Est == "MG" .and. x_Grupo == "0001"
+			_nIcmsNew := 0
+			
+		Case x_Est == "MG" .and. x_Grupo <> "0001"
+			_nIcmsNew := (_nStTot *.739985)*.18
+			
+		Case x_Est $"SP-RJ" .and. x_Grupo == "0001"
+			_nIcmsNew := (_nStTot *.431025)*.12
+			
+		Case x_Est $"SP-RJ" .and. x_Grupo <> "0001"
+			_nIcmsNew := (_nStTot *.726142)*.12
+			
+		Case x_Est $"ES-GO-TO-BA-DF" .and. x_Grupo == "0001"
+			_nIcmsNew := (_nStTot *.417536)*.07
+			
+		Case x_Est $"ES-GO-TO-BA-DF" .and. x_Grupo <> "0001"
+			_nIcmsNew := (_nStTot *.714999)*.07
+			
+		Case x_Est == "EX"
+			_nIcmsNew := 0
+			
+		OtherWise
+			_nIcmsNew := _nStICMS
+	EndCase
+EndIf
+
+
+IF x_Filial == "04" .and. SubStr(x_CF,2,3) $"201-202-203-204-208-209-922"
+	Do Case
+		Case x_Est == "RS"
+			_nIcmsNew := 0
+			
+		Case x_Est == "PR" .and. x_Grupo == "0001"
+			_nIcmsNew := (_nStTot *.4)*.12
+			
+		Case x_Est == "PR" .and. x_Grupo <> "0001"
+			_nIcmsNew := (_nStTot *.7)*.12
+			
+		Case x_Est == "EX"
+			_nIcmsNew := 0
+			
+		OtherWise
+			_nIcmsNew := _nStICMS
+	EndCase
+EndIf
+
+Return(_nIcmsNew)
+*/

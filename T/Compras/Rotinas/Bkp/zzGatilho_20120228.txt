@@ -1,0 +1,104 @@
+Iif(INCLUI,IF(EXISTBLOCK("zzGatilho"),U_zzGatilho(M->D1_CC,M->D1_COD),.T.),nil)                     
+
+
+
+
+
+
+
+
+
+
+User function  MT240TOK()
+Local lRet := .T.
+If SubStr(M->D3_CC,1,4)=="1105" .AND. empty (M->D3_ITEMCTA)
+	MsgAlert("Preencha o campo Item Contabil")
+	lRet := .F.
+EndIf
+
+
+
+D1_CC 
+D1_CC    
+D1_CONTA
+PRIMARIO
+Iif(INCLUI,IF(EXISTBLOCK("zzGatilho2"),U_zzGatilho2(M->C7_CC,M->C7_PRODUTO),.T.),nil)    
+NAO
+ALIAS EM BRANCO
+ORDEM 1 
+
+
+
+Iif(INCLUI,IF(EXISTBLOCK("zzGatilho"),U_zzGatilho(M->D1_CC,M->D1_COD),.T.),nil)                                     
+
+
+Iif(INCLUI,IF(EXISTBLOCK("zzPedido"),U_zzPedido(M->C7_CC,M->C7_PRODUTO),.T.),nil)       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+If SB1->(dbSeek( xFilial("SB1") + cProd ))
+		If SUBSTR(cCC,1,4)$ "1101" && FORMULA("CCD")		&& DESPESAS
+			cConta := SB1->B1_ZZDESP
+		ElseIf SUBSTR(cCC,1,4)$ "1105,1111" && FORMULA("CCC")	&&CUSTO
+			cConta := SB1->B1_ZZCUSTO
+		ElseIf SUBSTR(cCC,1,4)$ "2000" && FORMULA("CCE")		&&ESTOQUE
+			cConta := SB1->B1_CONTA
+		EndIf
+	EndIf	
+
+
+
+
+User Function zzGatilho(cCC,cProd)
+
+&&Local cCC    := ""
+&&Local cProd  := ""
+Local cConta := ""
+Local aArea  := GetArea()
+
+&&cCC   := M->D1_CC
+&&cProd := M->D1_COD
+
+SD1->(dbSetOrder(1))                 
+SB1->(dbSetOrder(1))
+SM4->(dbSetOrder(1))
+
+
+	If SB1->(dbSeek( xFilial("SB1") + cProd ))
+		If SUBSTR(cCC,1,4)$	FORMULA("CCD")	&&"1100,1101"	&& DESPESAS
+			cConta := SB1->B1_ZZDESP
+		ElseIf SUBSTR(cCC,1,4)$ FORMULA("CCC")	&&"1105,1111"	&&CUSTO
+			cConta := SB1->B1_ZZCUSTO
+		ElseIf SUBSTR(cCC,1,4)$ FORMULA("CCE")	&&"2000"	&&ESTOQUE
+			cConta := SB1->B1_CONTA
+		EndIf
+	EndIf	
+
+SB1->(dbCloseArea())
+SM4->(dbCloseArea())
+   
+If Empty(cConta)
+	Alert("Verifique se as Contas Contabeis de Custo, Despesa e Estoque estao devidamente preenchidas")
+	cConta := "CC NAO PREVISTO"
+EndIf
+
+RestArea(aArea)
+
+Return cConta

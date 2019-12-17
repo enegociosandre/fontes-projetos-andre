@@ -1,0 +1,64 @@
+#include "protheus.ch"
+
+/*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ M460FIM  ºAutor  ³Deivid A. C. de Limaº Data ³  19/04/10   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Ponto de entrada no final da geracao da NF Saida, utilizadoº±±
+±±º          ³ para gravacao de dados adicionais.                         º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ Faturamento                                                º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+
+User Function M460FIM()
+
+Local oTMsg  := FswTemplMsg():TemplMsg("S",SF2->F2_DOC,SF2->F2_SERIE,SF2->F2_CLIENTE,SF2->F2_LOJA)
+Local nPLiqui:= 0
+
+&& inicio calculo do peso liquido
+SD2->(dbSetOrder(3))
+SD2->(dbSeek(xFilial("SD2")+SF2->(F2_DOC+F2_SERIE+F2_CLIENTE+F2_LOJA)))
+Do While !SD2->(EOF()) .and. SD2->D2_FILIAL == xFilial("SD2") .and. SD2->(D2_DOC+D2_SERIE+D2_CLIENTE+D2_LOJA) == SF2->(F2_DOC+F2_SERIE+F2_CLIENTE+F2_LOJA)
+	nPLiqui += SD2->D2_QUANT * Posicione("SB1",1,xFilial("SB1")+SD2->D2_COD,"B1_PESO")
+	
+	SD2->(dbSkip())
+Enddo
+&& fim
+
+&& inicio template mensagens da NF
+SD2->(dbSetOrder(3))
+SD2->(dbSeek(xFilial("SD2")+SF2->(F2_DOC+F2_SERIE+F2_CLIENTE+F2_LOJA)))
+
+SC5->(dbSetOrder(1))
+SC5->(dbSeek(xFilial("SC5")+SD2->D2_PEDIDO))
+
+aAdd(oTMsg:aCampos,{"F2_TRANSP" ,IIF(SC5->(found()) , SC5->C5_TRANSP    , CriaVar("C5_TRANSP")   )   })
+aAdd(oTMsg:aCampos,{"F2_REDESP" ,IIF(SC5->(found()) , SC5->C5_REDESP    , CriaVar("C5_REDESP")   )   })
+aAdd(oTMsg:aCampos,{"F2_PLIQUI" ,IIF(!Empty(SC5->C5_PESOL),SC5->C5_PESOL,nPLiqui)})
+aAdd(oTMsg:aCampos,{"F2_PBRUTO" ,IIF(SC5->(found()) , SC5->C5_PBRUTO    , CriaVar("C5_PBRUTO")   )   })
+aAdd(oTMsg:aCampos,{"F2_VOLUME1",SF2->F2_VOLUME1})
+aAdd(oTMsg:aCampos,{"F2_ESPECI1",IIF(SC5->(found()) , SC5->C5_ESPECI1    , CriaVar("C5_ESPECI1")  ) })
+aAdd(oTMsg:aCampos,{"F2_ZZPLACA",CriaVar("F2_ZZPLACA")})
+aAdd(oTMsg:aCampos,{"F2_ZZUFPLA",CriaVar("F2_ZZUFPLA")})
+aAdd(oTMsg:aCampos,{"F2_ZZDTSAI",dDatabase})
+aAdd(oTMsg:aCampos,{"F2_ZZHRSAI",Time()})
+aAdd(oTMsg:aCampos,{"F2_ZZMARCA",CriaVar("F2_ZZMARCA")})
+aAdd(oTMsg:aCampos,{"F2_ZZNUMER",CriaVar("F2_ZZNUMER")})
+
+oTMsg:Processa()
+
+RecLock("SC5",.F.)
+SC5->C5_TRANSP := SF2->F2_TRANSP
+SC5->C5_REDESP := SF2->F2_REDESP
+MsUnlock()
+&& fim template mensagens da NF
+
+if SC5->(FOUND())
+	RecLock("SF2",.F.)
+	SF2->F2_TRANSP := SC5->C5_TRANSP 
+	SF2->(MsUnlock())
+endif	
+Return

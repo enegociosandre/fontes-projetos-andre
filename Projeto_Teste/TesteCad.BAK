@@ -1,0 +1,55 @@
+#include 'protheus.ch'
+#include "Totvs.ch"
+#include 'parmtype.ch'
+#include 'TOPCONN.ch'
+
+User Function TesteCad()   
+
+Local cTitulo		:= "Informe o produto a ser alterado"
+Private cPedido		:= SPACE(15)
+Private cNrSerie	:= SPACE(20)
+Private nLin		:= 004
+Private _oJanela
+Private lRet		:= .T.
+
+	DEFINE MSDIALOG _oJanela  TITLE cTitulo FROM 000,000 to 170,530 PIXEL 
+	 
+	nLin+=5
+	
+	@ nLin,012 Say "Produto:" SIZE 140,20 OF _oJanela PIXEL
+	@ nLin,060 MSGET cPedido F3 "SW2" WHEN .T. SIZE 60,07 OF _oJanela PIXEL
+
+	nLin+=15
+
+	@ nLin,012 Say "Nr de Serie:" SIZE 140,20 OF _oJanela PIXEL
+	@ nLin,060 MSGET cNrSerie WHEN .T. SIZE 60,07 OF _oJanela PIXEL
+
+	@ 60,130 BUTTON "Gravar" SIZE 50,12 ACTION(GravaSW3()) OF _oJanela PIXEL
+	@ 60,200 BUTTON "Cancelar" SIZE 50,12 ACTION(_oJanela:End()) OF _oJanela PIXEL
+	
+	Activate Dialog _oJanela Centered
+                          
+Return(lRet)
+
+
+Static Function GravaSW3()
+
+		
+	dbSelectArea("SB1")
+	SB1->(dbSetOrder(1))
+	If SB1->(dbSeek(xFilial("SB1") + cPedido ))
+		While !SB1->(EOF()) .AND. (SB1->B1_FILIAL + SB1->B1_COD) == (xFilial("SB1") + cPedido)
+			
+			SB1->(RecLock("SB1",.F.))
+					SB1->B1_DESC := cNrSerie
+			SB1->(MsUnLock())
+			
+			SB1->(dbSkip())
+	    EndDo
+	    SB1->(dbCloseArea())
+	EndIf
+
+	MsgInfo("Número de Série gravado!!!","Informação!")
+	_oJanela:End()
+	
+Return(lRet)
